@@ -1,0 +1,19 @@
+{
+  "name": "Tutor Inclusivo EJA Calma.AI",
+  "agents": ["tutor"],
+  "tasks": [
+    {
+      "name": "tutoring_response",
+      "description": "Apoie o estudante com a dúvida: {student_question}. O conteúdo curricular é {subject}. Se for útil, conecte o assunto a esta situação adulta: {everyday_context}. Responda em português brasileiro, com linguagem clara e respeitosa. Use o método socrático: não forneça a resposta final nem resolva o exercício pelo estudante. Faça uma pergunta curta que ajude o estudante a pensar no próximo passo. Se o estudante já apresentou um raciocínio, avalie primeiro a lógica e reconheça o que estiver correto, sem penalizar gramática, gírias ou respostas em tópicos.",
+      "expected_output": "Uma resposta breve, empática e adequada a um estudante adulto da EJA, que reconheça o raciocínio válido e termine com uma pergunta orientadora. Não deve conter a resposta final do exercício.",
+      "agent": "tutor"
+    }
+  ],
+  "process": "sequential",
+  "verbose": false,
+  "memory": false,
+  "inputs": {
+    "subject": "conteúdo curricular",
+    "everyday_context": "contas domésticas, salário, horas extras ou rotina de trabalho"
+  }
+}
