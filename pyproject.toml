@@ -1,0 +1,11 @@
+[project]
+name = "calma-ai"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "crewai>=1.15.30",
+]
+
+[tool.crewai]
+type = "crew"
+definition = "crew.jsonc"
