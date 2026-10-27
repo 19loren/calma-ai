@@ -3,9 +3,10 @@ name = "calma-ai"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
-    "crewai>=1.15.30",
+    "crewai[google-genai]>=1.15.30",
 ]
 
 [tool.crewai]
 type = "crew"
 definition = "crew.jsonc"
+project_id = "f95374c7-dd91-4f35-b526-01f6e669e1f0"

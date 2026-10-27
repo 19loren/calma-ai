@@ -2,15 +2,15 @@
 
 ## Setup
 
-Requires Python 3.12, [uv](https://docs.astral.sh/uv/), and an OpenAI API
-key. CrewAI AMP login is not required for this local declarative crew.
+Requires Python 3.12, [uv](https://docs.astral.sh/uv/), and a Gemini API key.
+CrewAI AMP login is not required for this local declarative crew.
 
 ```powershell
 uv sync
 Copy-Item .env.example .env
 ```
 
-Add your `OPENAI_API_KEY` to `.env`, then run the tutor:
+Add your `GEMINI_API_KEY` to `.env`, then run the tutor:
 
 ```powershell
 uv run crewai run
