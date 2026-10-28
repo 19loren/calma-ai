@@ -1,0 +1,68 @@
+diagnosticar:
+  description: >
+    Mensagem do estudante (id: {student_id}): "{student_question}"
+
+    Conteúdo curricular: {subject}.
+
+    Pré-análise do agente reflexivo (regras fixas, use como pista): {reflex_analysis}
+
+    Investigue antes de decidir:
+    1. Use `consultar_perfil_estudante` com o id "{student_id}" para ver o histórico
+       e as dificuldades recorrentes.
+    2. Use `consultar_conteudo_eja` para identificar o tópico, os erros comuns e as
+       perguntas orientadoras.
+    3. Use `calculadora` para obter a resposta correta do exercício e para conferir
+       qualquer conta que o estudante tenha feito. Não faça contas de cabeça.
+
+    Depois escolha UMA `proxima_acao`:
+    - fazer_pergunta: o estudante ainda não apresentou raciocínio ou está no começo.
+    - dar_dica: o estudante tentou e errou, travou, ou o histórico mostra a mesma
+      dificuldade repetida (nesse caso a pergunta sozinha não está bastando).
+    - validar_e_avancar: o raciocínio apresentado está correto, mas ainda incompleto.
+    - propor_exercicio: o estudante já chegou à resposta correta e precisa praticar.
+  expected_output: >
+    Diagnóstico estruturado com tópico, conceitos dominados, dificuldade principal,
+    se o raciocínio do estudante está correto (ou null se ele não tentou), a
+    resposta esperada verificada com a calculadora, a próxima ação e a justificativa.
+  agent: diagnosticador
+
+orientar:
+  description: >
+    Mensagem do estudante: "{student_question}"
+
+    Use o diagnóstico anterior e execute exatamente a `proxima_acao` escolhida:
+    - fazer_pergunta: faça uma pergunta curta que leve ao primeiro passo.
+    - dar_dica: dê uma dica concreta sobre a dificuldade principal (pode usar um
+      exemplo com números mais fáceis) e termine com uma pergunta.
+    - validar_e_avancar: diga especificamente o que está certo no raciocínio e
+      pergunte qual é o próximo passo.
+    - propor_exercicio: parabenize sem exagero e proponha um exercício novo do
+      mesmo tópico, buscando um na base com `consultar_conteudo_eja`.
+
+    Se for útil, conecte com {everyday_context}. Responda em português brasileiro.
+    Se a pré-análise indicar desânimo ou pedido de resposta pronta, o estudante já
+    recebeu uma mensagem de acolhimento: não repita, vá direto à orientação.
+    Nunca escreva a `resposta_esperada` nem o cálculo que leva direto a ela.
+  expected_output: >
+    Uma mensagem breve (até 5 frases), empática e adequada a um estudante adulto da
+    EJA, terminando com uma pergunta orientadora (ou com o exercício proposto).
+  agent: tutor
+  context:
+    - diagnosticar
+
+revisar:
+  description: >
+    Revise a mensagem do tutor antes de ela chegar ao estudante. Compare com a
+    `resposta_esperada` do diagnóstico e verifique se a mensagem:
+    1. Não revela o resultado final nem a conta completa que leva a ele.
+    2. É respeitosa, sem infantilizar, e não critica gramática ou gírias.
+    3. É curta e termina com uma pergunta.
+    Se algum critério falhar, reescreva a mensagem corrigindo o problema. Se
+    estiver tudo certo, mantenha a mensagem como está.
+  expected_output: >
+    A mensagem final para o estudante, indicando se a versão do tutor revelava a
+    resposta e quais ajustes foram feitos.
+  agent: revisor
+  context:
+    - diagnosticar
+    - orientar
