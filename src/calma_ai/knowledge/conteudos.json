@@ -1,0 +1,113 @@
+{
+  "porcentagem": {
+    "palavras_chave": ["porcentagem", "percentual", "por cento", "%", "aumento", "desconto", "reajuste"],
+    "conceitos": [
+      "Porcentagem é uma fração com denominador 100: 10% = 10/100 = 0,10.",
+      "Calcular x% de um valor é multiplicar o valor por x e dividir por 100.",
+      "Aumento: valor novo = valor antigo + parte do aumento. Desconto: valor novo = valor antigo - parte do desconto."
+    ],
+    "erros_comuns": [
+      "Somar a porcentagem direto ao valor (ex.: 180 + 10 em vez de calcular 10% de 180).",
+      "Confundir o valor do aumento com o valor final da conta.",
+      "Esquecer de dividir por 100."
+    ],
+    "perguntas_orientadoras": [
+      "Se a conta tivesse aumentado 100%, quanto teria aumentado?",
+      "E se fosse 50%, que parte da conta seria isso?",
+      "Como você poderia dividir o valor em 100 partes iguais?",
+      "Quantas dessas partes correspondem ao aumento?",
+      "O que a pergunta quer saber: só o aumento ou o valor novo da conta?"
+    ],
+    "exercicios": [
+      "O botijão de gás custava R$ 110 e teve aumento de 20%. Qual foi o valor do aumento?",
+      "Uma loja dá 15% de desconto em uma geladeira de R$ 2.400. Quanto você economiza?",
+      "Seu salário de R$ 1.800 teve reajuste de 5%. Qual é o novo salário?"
+    ]
+  },
+  "regra_de_tres": {
+    "palavras_chave": ["regra de três", "proporção", "proporcional", "receita", "rendimento"],
+    "conceitos": [
+      "Grandezas diretamente proporcionais: quando uma dobra, a outra também dobra.",
+      "Grandezas inversamente proporcionais: quando uma dobra, a outra cai pela metade.",
+      "Montar a regra de três é organizar os valores conhecidos lado a lado e descobrir o valor que falta."
+    ],
+    "erros_comuns": [
+      "Não perceber se a relação é direta ou inversa.",
+      "Misturar unidades diferentes na mesma coluna (horas com minutos, kg com g)."
+    ],
+    "perguntas_orientadoras": [
+      "Se uma quantidade dobrar, o que acontece com a outra?",
+      "Quais valores você já conhece e qual está faltando?",
+      "As unidades estão iguais nas duas linhas?"
+    ],
+    "exercicios": [
+      "Com 2 kg de farinha você faz 40 pães. Quantos pães faz com 5 kg?",
+      "4 pedreiros fazem um muro em 6 dias. Em quantos dias 3 pedreiros fariam o mesmo muro?",
+      "Seu carro roda 12 km com 1 litro. Quantos litros gasta em uma viagem de 300 km?"
+    ]
+  },
+  "fracoes": {
+    "palavras_chave": ["fração", "frações", "metade", "terço", "quarto", "dividir", "partes"],
+    "conceitos": [
+      "Uma fração representa partes de um todo: o denominador diz em quantas partes o todo foi dividido e o numerador diz quantas partes foram tomadas.",
+      "Para calcular uma fração de um valor, divida pelo denominador e multiplique pelo numerador.",
+      "Para somar frações, os denominadores precisam ser iguais."
+    ],
+    "erros_comuns": [
+      "Somar numeradores e denominadores diretamente (1/2 + 1/3 = 2/5).",
+      "Inverter numerador e denominador."
+    ],
+    "perguntas_orientadoras": [
+      "Em quantas partes iguais o todo foi dividido?",
+      "Quantas dessas partes estamos usando?",
+      "Como fica se você desenhar o todo e pintar as partes?"
+    ],
+    "exercicios": [
+      "Você gasta 1/4 do salário de R$ 2.000 com aluguel. Quanto paga de aluguel?",
+      "Uma pizza foi dividida em 8 pedaços e você comeu 3. Que fração da pizza sobrou?"
+    ]
+  },
+  "juros_simples": {
+    "palavras_chave": ["juros", "empréstimo", "parcela", "financiamento", "taxa", "crediário"],
+    "conceitos": [
+      "Juros simples: o juro de cada mês é sempre calculado sobre o valor inicial (capital).",
+      "Juros = capital x taxa x tempo (com a taxa em forma decimal).",
+      "Montante = capital + juros."
+    ],
+    "erros_comuns": [
+      "Usar a taxa em porcentagem sem dividir por 100.",
+      "Misturar taxa mensal com tempo em anos.",
+      "Confundir juros com montante."
+    ],
+    "perguntas_orientadoras": [
+      "Quanto de juros você paga em um mês?",
+      "E em dois meses, se o juro é sempre sobre o mesmo valor?",
+      "A taxa e o tempo estão na mesma unidade (mês ou ano)?"
+    ],
+    "exercicios": [
+      "Você pegou R$ 500 emprestado a 3% ao mês de juros simples. Quanto pagará de juros em 4 meses?",
+      "Uma TV de R$ 1.200 foi parcelada com juros simples de 2% ao mês por 6 meses. Qual é o valor total pago?"
+    ]
+  },
+  "area_perimetro": {
+    "palavras_chave": ["área", "perímetro", "metro quadrado", "m²", "piso", "cerca", "rodapé", "terreno"],
+    "conceitos": [
+      "Perímetro é a medida do contorno: soma de todos os lados.",
+      "Área é a medida da superfície; no retângulo, área = comprimento x largura.",
+      "Área usa unidade ao quadrado (m²); perímetro usa unidade linear (m)."
+    ],
+    "erros_comuns": [
+      "Confundir área com perímetro.",
+      "Esquecer de somar todos os lados no perímetro."
+    ],
+    "perguntas_orientadoras": [
+      "Você quer cobrir o chão (superfície) ou contornar o espaço (borda)?",
+      "Quantos lados tem a figura e quanto mede cada um?",
+      "Quantos quadrados de 1 m caberiam nesse chão?"
+    ],
+    "exercicios": [
+      "Uma sala tem 4 m por 5 m. Quantos m² de piso você precisa comprar?",
+      "Um terreno retangular mede 10 m por 25 m. Quantos metros de cerca são necessários para contorná-lo?"
+    ]
+  }
+}
