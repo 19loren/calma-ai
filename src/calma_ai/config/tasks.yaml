@@ -3,8 +3,14 @@ diagnosticar:
     Mensagem do estudante (id: {student_id}): "{student_question}"
 
     Conteúdo curricular: {subject}.
+    Contexto do dia a dia: {everyday_context}.
 
-    Pré-análise do agente reflexivo (regras fixas, use como pista): {reflex_analysis}
+    Pré-análise do agente reflexivo (regra aplicada, sinais percebidos, ação reflexa,
+    pergunta orientadora e contexto informado): {reflex_analysis}
+
+    Considere a pré-análise e o contexto do estudante, mas faça seu próprio diagnóstico
+    pedagógico. A ação reflexa indica como encaminhar o turno; `proxima_acao` é a
+    decisão pedagógica deste diagnóstico.
 
     Investigue antes de decidir:
     1. Use `consultar_perfil_estudante` com o id "{student_id}" para ver o histórico
@@ -30,19 +36,30 @@ orientar:
   description: >
     Mensagem do estudante: "{student_question}"
 
+    Pergunta-guia sugerida pelo agente reflexivo: {reflex_analysis}.
+    Mensagem reflexa ainda não exibida ao estudante: "{reflex_response}".
+
     Use o diagnóstico anterior e execute exatamente a `proxima_acao` escolhida:
-    - fazer_pergunta: faça uma pergunta curta que leve ao primeiro passo.
+    - fazer_pergunta: comece pelo primeiro passo que faça sentido para esta mensagem.
+      Se o conceito parecer novo, explique uma ideia básica em linguagem simples e
+      depois pergunte o que o estudante já percebeu.
     - dar_dica: dê uma dica concreta sobre a dificuldade principal (pode usar um
-      exemplo com números mais fáceis) e termine com uma pergunta.
+      exemplo análogo mais simples), explique só o próximo passo e pergunte como o
+      estudante continuaria.
     - validar_e_avancar: diga especificamente o que está certo no raciocínio e
       pergunte qual é o próximo passo.
     - propor_exercicio: parabenize sem exagero e proponha um exercício novo do
       mesmo tópico, buscando um na base com `consultar_conteudo_eja`.
 
-    Se for útil, conecte com {everyday_context}. Responda em português brasileiro.
-    Se a pré-análise indicar desânimo ou pedido de resposta pronta, o estudante já
-    recebeu uma mensagem de acolhimento: não repita, vá direto à orientação.
-    Nunca escreva a `resposta_esperada` nem o cálculo que leva direto a ela.
+    Use a pergunta-guia como inspiração, não copie um exemplo se os valores ou a
+    situação não corresponderem ao que o estudante escreveu. Personalize a resposta
+    com os dados e o contexto de {everyday_context}; reconheça tentativas específicas,
+    inclusive quando estiverem incompletas ou erradas. Se houver uma mensagem reflexa,
+    incorpore seu acolhimento ou limite em uma única resposta, sem repetir a frase pronta.
+    Responda em português brasileiro. Nunca entregue a resposta final nem resolva o
+    exercício original por completo. Você pode usar uma representação, uma etapa parcial
+    ou um exemplo análogo para ensinar; encerre com uma pergunta que convide o estudante
+    a pensar ou tentar o próximo passo. Trabalhe uma ideia por turno.
   expected_output: >
     Uma mensagem breve (até 5 frases), empática e adequada a um estudante adulto da
     EJA, terminando com uma pergunta orientadora (ou com o exercício proposto).
@@ -54,7 +71,7 @@ revisar:
   description: >
     Revise a mensagem do tutor antes de ela chegar ao estudante. Compare com a
     `resposta_esperada` do diagnóstico e verifique se a mensagem:
-    1. Não revela o resultado final nem a conta completa que leva a ele.
+    1. Não revela o resultado final nem apresenta uma conta já resolvida do exercício.
     2. É respeitosa, sem infantilizar, e não critica gramática ou gírias.
     3. É curta e termina com uma pergunta.
     Se algum critério falhar, reescreva a mensagem corrigindo o problema. Se
