@@ -3,7 +3,7 @@ name = "calma-ai"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
-    "crewai[google-genai]>=1.15.30",
+    "crewai>=1.15.30",
     "python-dotenv>=1.0.0",
 ]
 

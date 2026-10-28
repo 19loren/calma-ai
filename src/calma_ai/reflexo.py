@@ -5,6 +5,7 @@ regras condição-ação em ordem de prioridade. Não usa LLM nem memória, ent�
 cada decisão pode ser explicada pela regra que disparou.
 """
 
+import os
 import re
 import unicodedata
 from dataclasses import dataclass
@@ -46,6 +47,11 @@ PADRAO_TENTATIVA = re.compile(
     r"=|\bdeu\b|\bacho que\b|\bfiz\b|\bcalculei\b|\bminha resposta\b|"
     r"\bmultipliquei\b|\bdividi\b|\bsomei\b|\bsubtrai\b|\btentei\b"
 )
+PADRAO_TRAVOU = re.compile(
+    r"\bnao sei\b|\bnao faco ideia\b|\bcomo (eu )?(poderia|posso|comeco|comecar)\b|"
+    r"\bpor onde (comeco|comecar)\b|\bnao entendi\b"
+)
+PADRAO_CANSAÇO = re.compile(r"\bcansad[oa]\b|\bexaust[oa]\b|\bsem energia\b")
 PADRAO_DUVIDA = re.compile(
     r"\?|\b(como|quanto|quantos|quantas|qual|quais|por ?que|o que e|explica|entend|"
     r"calcul|conta|resolv|exercicio|questao|problema|ajuda|duvida|aprend|estud|"
@@ -90,6 +96,8 @@ class Percepcao:
     tem_numeros: bool
     mostra_tentativa: bool
     parece_duvida: bool
+    assunto_curricular: str | None
+    contexto_cotidiano: str | None
 
 
 @dataclass(frozen=True)
@@ -108,7 +116,11 @@ class DecisaoReflexa:
             f"regra {self.regra} ({self.condicao}) -> {self.acao.value}; "
             f"parece_duvida={p.parece_duvida}, tem_numeros={p.tem_numeros}, "
             f"mostra_tentativa={p.mostra_tentativa}, "
-            f"sinal_de_desanimo={p.sinal_de_desanimo}, pede_resposta_pronta={p.pede_resposta_pronta}"
+            f"sinal_de_desanimo={p.sinal_de_desanimo}, "
+            f"pede_resposta_pronta={p.pede_resposta_pronta}; "
+            f"assunto={p.assunto_curricular or 'não informado'}, "
+            f"contexto={p.contexto_cotidiano or 'não informado'}, "
+            f"pergunta_guia={self.pergunta_guia or 'nenhuma'}"
         )
 
 
@@ -119,21 +131,54 @@ def normalizar(texto: str) -> str:
 
 
 def escolher_pergunta_guia(p: Percepcao) -> str:
-    """Pergunta orientadora fixa: regra simples sobre a percepção + base de conhecimento."""
+    """Escolhe uma intervenção breve a partir da dúvida e da base curricular."""
+    encontrado = buscar_topico(p.texto_normalizado)
+    if encontrado is None and p.assunto_curricular:
+        encontrado = buscar_topico(p.assunto_curricular)
+
+    topico = encontrado[0] if encontrado else ""
+    se_travou = bool(PADRAO_TRAVOU.search(p.texto_normalizado))
+    if se_travou and topico == "interpretacao_texto":
+        return (
+            "Sem problema. Comece pelo título e pelo primeiro parágrafo, sem tentar "
+            "entender cada palavra. Sobre quem ou o que o texto fala?"
+        )
+    if se_travou:
+        return (
+            "Tudo bem não saber por onde começar. Vamos olhar para uma parte de cada "
+            "vez: o que você já entendeu do enunciado?"
+        )
+
     if p.mostra_tentativa:
         return (
             "Boa, você já tentou! Releia o problema: o que exatamente ele pergunta? "
             "A sua conta responde isso?"
         )
-    encontrado = buscar_topico(p.texto_normalizado)
     if encontrado:
         perguntas = encontrado[1].get("perguntas_orientadoras", [])
         if perguntas:
             return perguntas[0]
-    return "Vamos por partes: quais valores o problema te dá e o que ele quer que você descubra?"
+    if p.tem_numeros:
+        return "O que a questão quer descobrir e quais informações ela já te dá?"
+    return (
+        "Qual parte está mais difícil para você: entender o que a questão pede "
+        "ou descobrir por onde começar?"
+    )
 
 
-def perceber(mensagem: str) -> Percepcao:
+def contextualizar_pergunta(pergunta: str, p: Percepcao) -> str:
+    contexto = normalizar(p.contexto_cotidiano or "")
+    if PADRAO_CANSAÇO.search(contexto) and not PADRAO_TRAVOU.search(p.texto_normalizado):
+        return f"Como você disse que está cansado, vamos com calma: {pergunta}"
+    return pergunta
+
+
+def perceber(
+    mensagem: str,
+    *,
+    assunto_curricular: str | None = None,
+    contexto_cotidiano: str | None = None,
+) -> Percepcao:
     texto = normalizar(mensagem)
     pede = bool(PADRAO_PEDE_RESPOSTA.search(texto)) and not PADRAO_NEGA_RESPOSTA.search(texto)
     return Percepcao(
@@ -146,12 +191,23 @@ def perceber(mensagem: str) -> Percepcao:
         tem_numeros=bool(PADRAO_NUMERO.search(texto)),
         mostra_tentativa=bool(PADRAO_TENTATIVA.search(texto)),
         parece_duvida=bool(PADRAO_DUVIDA.search(texto)),
+        assunto_curricular=assunto_curricular,
+        contexto_cotidiano=contexto_cotidiano,
     )
 
 
-def decidir(mensagem: str) -> DecisaoReflexa:
+def decidir(
+    mensagem: str,
+    *,
+    assunto_curricular: str | None = None,
+    contexto_cotidiano: str | None = None,
+) -> DecisaoReflexa:
     """Aplica as regras condição-ação em ordem; a primeira que casar vence."""
-    p = perceber(mensagem)
+    p = perceber(
+        mensagem,
+        assunto_curricular=assunto_curricular,
+        contexto_cotidiano=contexto_cotidiano,
+    )
 
     if p.sinal_de_crise:
         regra, condicao, acao, encaminhar = "R1", "sinal de crise emocional", AcaoReflexa.ENCAMINHAR_APOIO, False
@@ -174,19 +230,27 @@ def decidir(mensagem: str) -> DecisaoReflexa:
         acao=acao,
         encaminhar_para_equipe=encaminhar,
         resposta=RESPOSTAS.get(acao),
-        pergunta_guia=escolher_pergunta_guia(p) if encaminhar else None,
+        pergunta_guia=(
+            contextualizar_pergunta(escolher_pergunta_guia(p), p) if encaminhar else None
+        ),
         percepcao=p,
     )
 
 
 def run() -> None:
-    """Modo demonstração: só o agente reflexivo, sem LLM e sem chave de API."""
-    print("Agente reflexivo Calma.AI (digite 'sair' para encerrar)\n")
+    """Modo demonstração: regras reflexivas, sem chamar o modelo da equipe."""
+    debug = os.getenv("CALMA_DEBUG", "").strip().lower() in {"1", "true", "sim"}
+    print("Calma.AI — modo de demonstração (sem modelo de IA)\n")
     try:
         nome = input("Qual é o seu nome? ").strip() or "Estudante"
     except EOFError:
         return
-    print(f"Olá, {nome}! Escreva sua dúvida ou sua tentativa de resolver o exercício.\n")
+    assunto = input("Conteúdo curricular [conteúdo curricular]: ").strip() or "conteúdo curricular"
+    contexto = (
+        input("Contexto do dia a dia [rotina de trabalho]: ").strip()
+        or "rotina de trabalho"
+    )
+    print(f"Olá, {nome}! Escreva sua dúvida ou tentativa. Digite 'sair' para encerrar.\n")
     while True:
         try:
             mensagem = input(f"{nome}: ")
@@ -194,14 +258,16 @@ def run() -> None:
             break
         if normalizar(mensagem) == "sair":
             break
-        decisao = decidir(mensagem)
-        print(f"[reflexo] {decisao.resumo()}")
+        decisao = decidir(
+            mensagem,
+            assunto_curricular=assunto,
+            contexto_cotidiano=contexto,
+        )
+        if debug:
+            print(f"[debug] {decisao.resumo()}")
         resposta = " ".join(t for t in (decisao.resposta, decisao.pergunta_guia) if t)
         if resposta:
-            print(f"Tutor: {resposta}")
-        if decisao.encaminhar_para_equipe:
-            print("[reflexo] no fluxo completo (uv run crewai run) a equipe de agentes daria uma orientação personalizada.")
-        print()
+            print(f"\nTutor:\n{resposta}\n")
 
 
 if __name__ == "__main__":

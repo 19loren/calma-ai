@@ -63,3 +63,16 @@ def test_guardrail_aceita_mensagem_com_pergunta():
 @pytest.mark.parametrize("mensagem", ["O aumento foi de 18 reais.", "   ", "Pergunta? " * 200])
 def test_guardrail_rejeita_mensagem_invalida(mensagem):
     assert not validar_mensagem_final(_saida(mensagem))[0]
+
+
+def test_guardrail_aceita_pista_parcial_com_exemplo():
+    assert validar_mensagem_final(
+        _saida("Se o valor fosse R$ 100, como você descobriria quanto representa 10%?")
+    )[0]
+
+
+def test_guardrail_rejeita_conta_ja_resolvida():
+    mensagem = "100 × 23 / 100 = 23. Como chegou a esse resultado?"
+    valido, feedback = validar_mensagem_final(_saida(mensagem))
+    assert not valido
+    assert "conta já resolvida" in feedback

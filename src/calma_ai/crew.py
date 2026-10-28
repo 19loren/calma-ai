@@ -1,3 +1,4 @@
+import re
 from typing import Any
 
 from crewai import Agent, Crew, Process, Task
@@ -9,6 +10,10 @@ from calma_ai.models import Diagnostico, RespostaRevisada
 from calma_ai.tools import CalculadoraTool, ConsultarConteudoTool, PerfilEstudanteTool
 
 LIMITE_CARACTERES = 1000
+PADRAO_CONTA_RESOLVIDA = re.compile(
+    r"\b\d+(?:[.,]\d+)?\s*[x×*/÷+]\s*\d+(?:[.,]\d+)?"
+    r"(?:\s*[x×*/÷+]\s*\d+(?:[.,]\d+)?)*\s*=\s*-?\d+(?:[.,]\d+)?"
+)
 
 
 def validar_mensagem_final(output: TaskOutput) -> tuple[bool, Any]:
@@ -23,6 +28,12 @@ def validar_mensagem_final(output: TaskOutput) -> tuple[bool, Any]:
     mensagem = resposta.mensagem.strip()
     if not mensagem:
         return False, "A mensagem final está vazia."
+    if PADRAO_CONTA_RESOLVIDA.search(mensagem.lower()):
+        return (
+            False,
+            "Não apresente uma conta já resolvida. Dê uma pista parcial e faça uma "
+            "pergunta orientadora.",
+        )
     if "?" not in mensagem:
         return False, "A mensagem final precisa conter uma pergunta orientadora para o estudante."
     if len(mensagem) > LIMITE_CARACTERES:
