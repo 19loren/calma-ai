@@ -12,7 +12,7 @@
       "Esquecer de dividir por 100."
     ],
     "perguntas_orientadoras": [
-      "Se a conta tivesse aumentado 100%, quanto teria aumentado?",
+      "Vamos por partes: o que significa a porcentagem indicada no problema? Como você poderia representá-la como partes iguais de um todo?",
       "E se fosse 50%, que parte da conta seria isso?",
       "Como você poderia dividir o valor em 100 partes iguais?",
       "Quantas dessas partes correspondem ao aumento?",
@@ -108,6 +108,41 @@
     "exercicios": [
       "Uma sala tem 4 m por 5 m. Quantos m² de piso você precisa comprar?",
       "Um terreno retangular mede 10 m por 25 m. Quantos metros de cerca são necessários para contorná-lo?"
+    ]
+  },
+  "interpretacao_texto": {
+    "palavras_chave": [
+      "interpretação de texto",
+      "interpretar",
+      "interpreto",
+      "interpretação",
+      "texto",
+      "leitura",
+      "ideia principal",
+      "assunto do texto",
+      "autor",
+      "parágrafo",
+      "compreender"
+    ],
+    "conceitos": [
+      "A ideia principal resume o assunto mais importante do texto.",
+      "O título, as palavras que se repetem e o início de cada parágrafo ajudam a identificar o assunto.",
+      "Uma inferência é uma conclusão apoiada por pistas do texto, mesmo quando não está escrita diretamente."
+    ],
+    "erros_comuns": [
+      "Tentar entender cada palavra antes de perceber o assunto geral.",
+      "Confundir uma informação de detalhe com a ideia principal.",
+      "Fazer uma inferência sem relacioná-la a pistas do texto."
+    ],
+    "perguntas_orientadoras": [
+      "Quando você lê um texto, o que costuma ser mais difícil: entender as palavras, encontrar a ideia principal ou perceber o que o autor quis dizer?",
+      "O que o título e as palavras que se repetem sugerem sobre o assunto?",
+      "Qual frase parece trazer a informação mais importante? Que pista do texto ajuda você a escolher?",
+      "O que o autor diz diretamente e o que você consegue concluir pelas pistas?"
+    ],
+    "exercicios": [
+      "Leia uma notícia curta. Qual é o fato principal e que trecho do texto confirma sua resposta?",
+      "Escolha um parágrafo de um texto do seu dia a dia. Como você resumiria a ideia principal em uma frase?"
     ]
   }
 }

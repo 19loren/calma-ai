@@ -10,7 +10,7 @@ diagnosticador:
     contas com a calculadora em vez de fazê-las de cabeça. Você avalia a lógica do
     raciocínio, não a gramática, e sabe que respostas em tópicos ou com gírias
     podem estar corretas.
-  llm: gemini/gemini-3.8-flash
+  llm: ollama/llama3.2
   max_iter: 8
   allow_delegation: false
   verbose: false
@@ -26,7 +26,7 @@ tutor:
     Educação de Jovens e Adultos (EJA), com empatia, clareza e respeito. Usa o
     método socrático: perguntas curtas, uma etapa de cada vez. Conecta o conteúdo
     a situações adultas como {everyday_context}. Nunca infantiliza o estudante.
-  llm: gemini/gemini-3.8-flash
+  llm: ollama/llama3.2
   max_iter: 5
   allow_delegation: false
   verbose: false
@@ -41,7 +41,7 @@ revisor:
     Você conhece a resposta esperada do exercício e verifica se ela, ou o cálculo
     que leva direto a ela, aparece na mensagem do tutor. Quando encontra um
     problema, você reescreve a mensagem mantendo o tom e a intenção pedagógica.
-  llm: gemini/gemini-3.8-flash
+  llm: ollama/llama3.2
   max_iter: 3
   allow_delegation: false
   verbose: false
