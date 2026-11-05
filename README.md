@@ -90,6 +90,30 @@ encerrar. O histórico é consultado para contextualizar os próximos turnos.
 uv run pytest
 ```
 
+## Classificação de materiais da EJA
+
+Coloque os arquivos `.pptx` em `data/raw` ou informe outra pasta para extrair
+títulos e textos dos slides e gerar os embeddings:
+
+```powershell
+python src/prep_eja.py
+python src/prep_eja.py --input-dir "C:\caminho\para\apresentacoes"
+```
+
+O pré-processamento grava a planilha estruturada e os conjuntos de embeddings
+em `data/processed`. Para supervisionar o modelo, preencha a coluna `categoria`
+na planilha gerada e rode o pré-processamento novamente; os rótulos anotados
+para os slides correspondentes serão preservados nos arquivos `.npy`. Depois,
+treine e avalie o MLP:
+
+```powershell
+python src/treino_mlp_eja.py
+```
+
+Os gráficos são salvos em `resultados/sup/graficos` e o modelo em
+`data/processed/modelo_mlp_eja.pkl`. A categoria inicial de cada slide é `0`.
+O SMOTE é ignorado com aviso quando não há classes suficientes para balancear.
+
 ## Privacidade
 
 Nunca faça commit do `.env` nem compartilhe sua chave de API. A pasta `data/`
