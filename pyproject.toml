@@ -1,0 +1,31 @@
+[project]
+name = "calma-ai"
+version = "0.1.0"
+requires-python = ">=3.10, <3.12"
+dependencies = [
+    "crewai[google-genai]>=1.15.33",
+    "python-dotenv>=1.0.0",
+    "pymupdf",
+    "chromadb"
+]
+
+[project.scripts]
+calma_ai = "calma_ai.main:run"
+run_crew = "calma_ai.main:run"
+reflexo = "calma_ai.ml.reflexo:run"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/calma_ai"]
+
+[tool.crewai]
+type = "crew"
+project_id = "f95374c7-dd91-4f35-b526-01f6e669e1f0"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
