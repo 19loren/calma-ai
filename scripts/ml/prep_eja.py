@@ -16,7 +16,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.model_selection import train_test_split
 
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
+ROOT_DIR = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = ROOT_DIR / "data" / "processed"
 MODEL_NAME = "neuralmind/bert-base-portuguese-cased"
 RANDOM_STATE = 42

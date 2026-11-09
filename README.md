@@ -29,6 +29,14 @@ Equipe CrewAI (Llama 3.2 via Ollama local)                  src/calma_ai/crew.py
 Progresso do estudante salvo em data/estudantes/<id>.json
 ```
 
+## Estrutura do projeto
+
+- `src/calma_ai/`: aplicação, ferramentas, conteúdo e configuração da equipe.
+- `scripts/ml/`: utilitários opcionais para extrair apresentações e treinar o MLP.
+- `tests/`: testes automatizados.
+- `data/`: dados e modelos locais, ignorados pelo Git.
+- `resultados/`: gráficos de avaliação gerados pelo treinamento.
+
 No fluxo completo, acolhimentos e limites do agente reflexivo são incorporados à
 orientação do tutor em uma única resposta. Perguntas-guia são sugestões: o tutor deve
 adaptá-las à dúvida, à tentativa e ao contexto reais do estudante.
@@ -97,8 +105,8 @@ Coloque os arquivos `.pptx` em `data/raw` ou informe outra pasta para extrair
 títulos e textos dos slides e gerar os embeddings:
 
 ```powershell
-python src/prep_eja.py
-python src/prep_eja.py --input-dir "C:\caminho\para\apresentacoes"
+python scripts/ml/prep_eja.py
+python scripts/ml/prep_eja.py --input-dir "C:\caminho\para\apresentacoes"
 ```
 
 O pré-processamento grava a planilha estruturada e os conjuntos de embeddings
@@ -108,12 +116,14 @@ para os slides correspondentes serão preservados nos arquivos `.npy`. Depois,
 treine e avalie o MLP:
 
 ```powershell
-python src/treino_mlp_eja.py
+python scripts/ml/treino_mlp_eja.py
 ```
 
 Os gráficos são salvos em `resultados/sup/graficos` e o modelo em
 `data/processed/modelo_mlp_eja.pkl`. A categoria inicial de cada slide é `0`.
 O SMOTE é ignorado com aviso quando não há classes suficientes para balancear.
+As dependências específicas desses utilitários estão listadas no início de cada
+script; elas não são necessárias para executar o tutor.
 
 ## RAG para identificação de materiais
 
