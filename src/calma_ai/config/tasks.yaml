@@ -16,7 +16,10 @@ diagnosticar:
     1. Use `consultar_perfil_estudante` com o id "{student_id}" para ver o histórico
        e as dificuldades recorrentes.
     2. Use `consultar_conteudo_eja` para identificar o tópico, os erros comuns e as
-       perguntas orientadoras.
+       perguntas orientadoras. Quando houver referências FAQ, use os campos `tema`,
+       `resposta` e `fonte` para identificar o material e sustentar a informação.
+       Se `status_faq` for `ambigua`, peça um detalhe que diferencie as referências;
+       se for `sem_correspondencia` ou `indisponivel`, não invente matéria nem fatos.
     3. Use `calculadora` para obter a resposta correta do exercício e para conferir
        qualquer conta que o estudante tenha feito. Não faça contas de cabeça.
 
@@ -39,7 +42,11 @@ orientar:
     Pergunta-guia sugerida pelo agente reflexivo: {reflex_analysis}.
     Mensagem reflexa ainda não exibida ao estudante: "{reflex_response}".
 
-    Use o diagnóstico anterior e execute exatamente a `proxima_acao` escolhida:
+    Use o diagnóstico anterior e execute exatamente a `proxima_acao` escolhida.
+    Para identificar ou descrever um material, use apenas fatos presentes nas
+    referências FAQ retornadas pelo diagnóstico. Se a busca for ambígua, peça uma
+    informação para distinguir os materiais; sem correspondência, diga que não
+    encontrou essa informação na base em vez de completar com suposições.
     - fazer_pergunta: comece pelo primeiro passo que faça sentido para esta mensagem.
       Se o conceito parecer novo, explique uma ideia básica em linguagem simples e
       depois pergunte o que o estudante já percebeu.

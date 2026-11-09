@@ -34,12 +34,13 @@ orientação do tutor em uma única resposta. Perguntas-guia são sugestões: o 
 adaptá-las à dúvida, à tentativa e ao contexto reais do estudante.
 
 - Agentes e tarefas: `src/calma_ai/config/agents.yaml` e `tasks.yaml`.
-- Ferramentas: `src/calma_ai/tools/` (calculadora segura, base de conteúdo, perfil do estudante).
-- Base de conhecimento: `src/calma_ai/knowledge/conteudos.json`.
+- Ferramentas: `src/calma_ai/tools/` (calculadora segura, conteúdo e perfil do estudante).
+- Base curricular: `src/calma_ai/knowledge/conteudos.json`.
+- Recuperação de FAQs e metadados dos materiais: `src/calma_ai/knowledge/faqs.py`.
 
 ## Setup
 
-Requer Python 3.12+ e [uv](https://docs.astral.sh/uv/). O fluxo completo também requer
+Requer Python 3.10 ou 3.11 e [uv](https://docs.astral.sh/uv/). O fluxo completo também requer
 o [Ollama](https://ollama.com/) instalado e em execução localmente.
 
 ```powershell
@@ -113,6 +114,29 @@ python src/treino_mlp_eja.py
 Os gráficos são salvos em `resultados/sup/graficos` e o modelo em
 `data/processed/modelo_mlp_eja.pkl`. A categoria inicial de cada slide é `0`.
 O SMOTE é ignorado com aviso quando não há classes suficientes para balancear.
+
+## RAG para identificação de materiais
+
+O tool `consultar_conteudo_eja` mantém a busca curricular existente e também pode
+recuperar até três FAQs completas da base consolidada. Cada pergunta, resposta e
+metadados (ID, tema, fonte, PDF, páginas e origem) formam um único registro: as
+203 FAQs atuais têm perguntas de até 98 caracteres e respostas de até 327, então
+dividi-las ou sobrepor fragmentos separaria informações que já são unidades
+semânticas completas. Não há chunking adicional nem overlap.
+
+A recuperação usa vetores TF-IDF esparsos, similaridade de cosseno e normalização
+de acentos; o índice em memória é adequado a esta base pequena e não exige modelo
+denso nem serviço externo. O BERT português em `prep_eja.py` continua reservado à
+classificação MLP dos slides e não é usado para recuperar FAQs. Para evitar falsos
+positivos, consultas com vários termos precisam compartilhar ao menos dois termos
+de conteúdo; resultados com pontuação até 25% da primeira são sinalizados como
+ambíguos. Termos únicos que aparecem em temas diferentes também são ambíguos. O
+agente deve apoiar fatos do material apenas nas FAQs retornadas.
+
+O arquivo `data/FAQ_CONSOLIDADO.md` é dado local e não é versionado pela regra de
+privacidade de `data/`. Para usar outra localização, defina `CALMA_FAQ_PATH`; se o
+arquivo não estiver disponível, o tool informa que não pode fazer a recuperação
+de FAQs e mantém a busca curricular que já existia.
 
 ## Privacidade
 
