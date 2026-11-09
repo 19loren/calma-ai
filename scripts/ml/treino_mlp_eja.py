@@ -17,7 +17,7 @@ from sklearn.model_selection import KFold, StratifiedKFold, learning_curve
 from sklearn.neural_network import MLPClassifier
 
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
+ROOT_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT_DIR / "data" / "processed"
 GRAPH_DIR = ROOT_DIR / "resultados" / "sup" / "graficos"
 MODEL_PATH = DATA_DIR / "modelo_mlp_eja.pkl"
