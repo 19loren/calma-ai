@@ -5,7 +5,7 @@ import unicodedata
 from functools import lru_cache
 from pathlib import Path
 
-ARQUIVO_CONTEUDOS = Path(__file__).resolve().parent / "knowledge" / "conteudos.json"
+ARQUIVO_CONTEUDOS = Path(__file__).resolve().parent / "conteudos.json"
 
 
 def _normalizar(texto: str) -> str:

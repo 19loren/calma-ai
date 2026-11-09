@@ -31,11 +31,49 @@ Progresso do estudante salvo em data/estudantes/<id>.json
 
 ## Estrutura do projeto
 
-- `src/calma_ai/`: aplicação, ferramentas, conteúdo e configuração da equipe.
-- `scripts/ml/`: utilitários opcionais para extrair apresentações e treinar o MLP.
-- `tests/`: testes automatizados.
-- `data/`: dados e modelos locais, ignorados pelo Git.
-- `resultados/`: gráficos de avaliação gerados pelo treinamento.
+```text
+.
+├── .crewai/               # Metadados de execução do CLI CrewAI
+├── .env                   # Configuração local (não versionar)
+├── .gitignore             # Arquivos locais e saídas que não entram no Git
+├── src/calma_ai/          # Aplicação do tutor
+│   ├── config/            # Instruções dos agentes e tarefas
+│   ├── knowledge/         # Dados curriculares, consulta e recuperação de FAQs
+│   └── tools/             # Calculadora, consulta de conteúdo e progresso
+├── data/
+│   ├── faq/               # Base de FAQs usada pelo RAG
+│   └── datasets/
+│       └── faq_qa/        # Exemplos JSONL para QA com recuperação de FAQs
+├── scripts/ml/            # Pré-processamento e treinamento opcionais de slides
+├── tests/                 # Testes automatizados
+├── docs/                  # Exemplos e material de apoio
+├── pyproject.toml         # Dependências, comandos e configuração do projeto
+├── uv.lock                # Versões resolvidas das dependências
+└── README.md              # Este guia
+```
+
+### O que é usado por cada parte
+
+- **Tutor:** `src/calma_ai/`; o comando `uv run reflexo` usa regras determinísticas,
+  enquanto `uv run crewai run` também usa os agentes configurados em `config/`.
+- **Base de conhecimento:** `src/calma_ai/knowledge/conteudos.json` contém o conteúdo
+  curricular, carregado por `src/calma_ai/knowledge/conteudos.py`;
+  `src/calma_ai/knowledge/faqs.py` recupera FAQs de
+  `data/faq/FAQ_CONSOLIDADO.md`.
+- **Progresso:** os históricos dos estudantes são gravados em `data/estudantes/`.
+- **Classificação de slides:** `scripts/ml/` é um fluxo opcional e separado do tutor.
+  Ele lê apresentações `.pptx`, gera dados em `data/processed/` e salva gráficos em
+  `resultados/`.
+- **Dataset de QA:** `data/datasets/faq_qa/` contém conjuntos `train`, `val` e
+  `test` de conversas com respostas apoiadas ou não pelas FAQs. O README dessa pasta
+  explica o formato, os rótulos e as divisões. Nenhum pipeline atual do repositório
+  carrega esses arquivos para treinar ou avaliar um modelo.
+- **Exemplos para testar o tutor:** [`docs/exemplos_perguntas.md`](docs/exemplos_perguntas.md).
+
+As bases em `data/faq/` e `data/datasets/` são versionadas. Já `data/raw/`,
+`data/processed/`, `data/estudantes/`, `resultados/`, `state/` e o ambiente virtual
+são pastas locais/de saída e ficam fora do Git. O diretório `.crewai/` contém
+metadados da execução do CLI CrewAI; não faz parte do código do tutor.
 
 No fluxo completo, acolhimentos e limites do agente reflexivo são incorporados à
 orientação do tutor em uma única resposta. Perguntas-guia são sugestões: o tutor deve
@@ -125,7 +163,7 @@ O SMOTE é ignorado com aviso quando não há classes suficientes para balancear
 As dependências específicas desses utilitários estão listadas no início de cada
 script; elas não são necessárias para executar o tutor.
 
-## RAG para identificação de materiais
+## Recuperação de FAQs (RAG)
 
 O tool `consultar_conteudo_eja` mantém a busca curricular existente e também pode
 recuperar até três FAQs completas da base consolidada. Cada pergunta, resposta e
@@ -143,12 +181,13 @@ de conteúdo; resultados com pontuação até 25% da primeira são sinalizados c
 ambíguos. Termos únicos que aparecem em temas diferentes também são ambíguos. O
 agente deve apoiar fatos do material apenas nas FAQs retornadas.
 
-O arquivo `data/FAQ_CONSOLIDADO.md` é dado local e não é versionado pela regra de
-privacidade de `data/`. Para usar outra localização, defina `CALMA_FAQ_PATH`; se o
-arquivo não estiver disponível, o tool informa que não pode fazer a recuperação
-de FAQs e mantém a busca curricular que já existia.
+O arquivo `data/faq/FAQ_CONSOLIDADO.md` é a base versionada usada por padrão. Para
+usar outra localização, defina `CALMA_FAQ_PATH`; se o arquivo não estiver disponível,
+o tool informa que não pode recuperar FAQs e mantém a busca curricular existente.
 
 ## Privacidade
 
-Nunca faça commit do `.env` nem compartilhe sua chave de API. A pasta `data/`
-guarda o histórico dos estudantes e também fica fora do Git.
+Nunca faça commit do `.env` nem compartilhe sua chave de API. O histórico dos
+estudantes fica em `data/estudantes/`, uma pasta local ignorada pelo Git. Não coloque
+informações pessoais de estudantes nas bases versionadas de `data/faq/` ou
+`data/datasets/`.

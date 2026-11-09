@@ -11,7 +11,7 @@ import unicodedata
 from dataclasses import dataclass
 from enum import Enum
 
-from calma_ai.conhecimento import buscar_topico
+from calma_ai.knowledge.conteudos import buscar_topico
 
 
 class AcaoReflexa(str, Enum):

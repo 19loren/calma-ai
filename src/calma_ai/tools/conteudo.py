@@ -4,7 +4,7 @@ import logging
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
-from calma_ai.conhecimento import buscar_topico, carregar_conteudos
+from calma_ai.knowledge.conteudos import buscar_topico, carregar_conteudos
 from calma_ai.knowledge.faqs import FAQSearch, search_faqs
 
 LOGGER = logging.getLogger(__name__)
