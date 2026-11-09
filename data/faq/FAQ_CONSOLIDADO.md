@@ -2360,7 +2360,7 @@ Usa-se sujeito e verbo principal. Na terceira pessoa do singular, o verbo recebe
 **Origem:** [Google Drive](https://docs.google.com/presentation/d/1QZlIQgfyN45Pfsg_tALkCTRNMzdBc6VH/edit?usp=drivesdk&ouid=107159505966451091098&rtpof=true&sd=true)
 
 ## Como se formam negativas e perguntas no simple present com verbos principais comuns?
-
+\
 Usam-se do ou does como auxiliares. Na negativa, don't ou doesn't; na interrogativa, o auxiliar antecede o sujeito. Does é empregado com he, she e it. A regra da aula é apresentada para essa construção com verbo principal e não substitui as construções próprias de to be.
 
 **ID:** cmsp-34-007  

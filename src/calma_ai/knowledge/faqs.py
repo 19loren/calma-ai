@@ -12,7 +12,7 @@ from functools import lru_cache
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
-DEFAULT_FAQ_PATH = ROOT_DIR / "data" / "FAQ_CONSOLIDADO.md"
+DEFAULT_FAQ_PATH = ROOT_DIR / "data" / "faq" / "FAQ_CONSOLIDADO.md"
 AMBIGUITY_MARGIN_RATIO = 0.25
 
 _DOCUMENT_HEADER = re.compile(r"^# Documento \d+:\s*(.+?)\s*$")
