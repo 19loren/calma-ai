@@ -44,7 +44,7 @@ Progresso do estudante salvo em data/estudantes/<id>.json
 │   ├── faq/               # Base de FAQs usada pelo RAG
 │   └── datasets/
 │       └── faq_qa/        # Exemplos JSONL para QA com recuperação de FAQs
-├── scripts/ml/            # Pré-processamento e treinamento opcionais de slides
+├── scripts/ml/            # Ajuste fino do modelo de QA contextual com JSONL
 ├── tests/                 # Testes automatizados
 ├── docs/                  # Exemplos e material de apoio
 ├── pyproject.toml         # Dependências, comandos e configuração do projeto
@@ -61,13 +61,12 @@ Progresso do estudante salvo em data/estudantes/<id>.json
   `src/calma_ai/knowledge/faqs.py` recupera FAQs de
   `data/faq/FAQ_CONSOLIDADO.md`.
 - **Progresso:** os históricos dos estudantes são gravados em `data/estudantes/`.
-- **Classificação de slides:** `scripts/ml/` é um fluxo opcional e separado do tutor.
-  Ele lê apresentações `.pptx`, gera dados em `data/processed/` e salva gráficos em
-  `resultados/`.
-- **Dataset de QA:** `data/datasets/faq_qa/` contém conjuntos `train`, `val` e
-  `test` de conversas com respostas apoiadas ou não pelas FAQs. O README dessa pasta
-  explica o formato, os rótulos e as divisões. Nenhum pipeline atual do repositório
-  carrega esses arquivos para treinar ou avaliar um modelo.
+- **Modelo de QA:** `scripts/ml/treino_faq_qa.py` ajusta um modelo de linguagem
+  seq2seq com os exemplos `train.jsonl`, escolhe o melhor checkpoint pela perda
+  em `val.jsonl` e calcula métricas uma única vez em `test.jsonl`.
+- **Dataset de QA:** `data/datasets/faq_qa/` contém as conversas e as divisões
+  documentadas em seu README. O texto system+user (contexto e pergunta) é a entrada
+  do modelo; a resposta assistant é o alvo de geração.
 - **Exemplos para testar o tutor:** [`docs/exemplos_perguntas.md`](docs/exemplos_perguntas.md).
 
 As bases em `data/faq/` e `data/datasets/` são versionadas. Já `data/raw/`,
@@ -137,31 +136,35 @@ encerrar. O histórico é consultado para contextualizar os próximos turnos.
 uv run pytest
 ```
 
-## Classificação de materiais da EJA
+## Ajuste fino do modelo de QA com JSONL
 
-Coloque os arquivos `.pptx` em `data/raw` ou informe outra pasta para extrair
-títulos e textos dos slides e gerar os embeddings:
+O pipeline usa o modelo seq2seq em português `unicamp-dl/ptt5-small-portuguese-vocab`
+(60 milhões de parâmetros) como ponto de partida. Ele aprende a gerar respostas
+condicionadas ao system prompt, ao contexto e à pergunta. O modelo base é
+pré-treinado; este comando faz ajuste fino com os exemplos do projeto.
 
-```powershell
-python scripts/ml/prep_eja.py
-python scripts/ml/prep_eja.py --input-dir "C:\caminho\para\apresentacoes"
-```
-
-O pré-processamento grava a planilha estruturada e os conjuntos de embeddings
-em `data/processed`. Para supervisionar o modelo, preencha a coluna `categoria`
-na planilha gerada e rode o pré-processamento novamente; os rótulos anotados
-para os slides correspondentes serão preservados nos arquivos `.npy`. Depois,
-treine e avalie o MLP:
+Crie um ambiente Python 3.11 e instale o projeto e as dependências extras com
+`uv` (não é necessário ter `pip` dentro do ambiente):
 
 ```powershell
-python scripts/ml/treino_mlp_eja.py
+py -3.12 -m uv python install 3.11
+py -3.12 -m uv venv --python 3.11 .venv-qa
+py -3.12 -m uv pip install --link-mode copy --python .venv-qa\Scripts\python.exe -e ".[faq-qa]"
 ```
 
-Os gráficos são salvos em `resultados/sup/graficos` e o modelo em
-`data/processed/modelo_mlp_eja.pkl`. A categoria inicial de cada slide é `0`.
-O SMOTE é ignorado com aviso quando não há classes suficientes para balancear.
-As dependências específicas desses utilitários estão listadas no início de cada
-script; elas não são necessárias para executar o tutor.
+Treine, selecione o checkpoint pela validação e avalie no teste:
+
+```powershell
+.\.venv-qa\Scripts\python.exe scripts\ml\treino_faq_qa.py
+```
+
+O conjunto de teste é usado somente depois do treino. As dependências extras
+incluem `accelerate`, necessário pelo `Trainer` do Transformers. A avaliação grava
+`test_metrics.json` junto do modelo em `models/faq_qa_ptt5/`; essa pasta é
+ignorada pelo Git. Para trocar modelo, tamanho do batch ou épocas, use
+`--model`, `--batch-size` e `--epochs`. O modelo pequeno requer menos recursos,
+mas o tempo de treinamento depende do hardware; não há garantia de qualidade
+sem avaliar as métricas e revisar respostas geradas.
 
 ## Recuperação de FAQs (RAG)
 
@@ -174,8 +177,9 @@ semânticas completas. Não há chunking adicional nem overlap.
 
 A recuperação usa vetores TF-IDF esparsos, similaridade de cosseno e normalização
 de acentos; o índice em memória é adequado a esta base pequena e não exige modelo
-denso nem serviço externo. O BERT português em `prep_eja.py` continua reservado à
-classificação MLP dos slides e não é usado para recuperar FAQs. Para evitar falsos
+denso nem serviço externo. O modelo ajustado pelos JSONL é um fluxo de treino
+separado; não substitui nem altera automaticamente o modelo Ollama ou o RAG usado
+no runtime do tutor. Para evitar falsos
 positivos, consultas com vários termos precisam compartilhar ao menos dois termos
 de conteúdo; resultados com pontuação até 25% da primeira são sinalizados como
 ambíguos. Termos únicos que aparecem em temas diferentes também são ambíguos. O
