@@ -1,6 +1,8 @@
 import re
 from typing import Any
 
+from data.database import obter_contexto_aluno
+
 from crewai import Agent, Crew, Process, Task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
@@ -75,7 +77,17 @@ class CalmaAI:
 
     @task
     def orientar(self) -> Task:
-        return Task(config=self.tasks_config["orientar"])  # type: ignore[index]
+        # busca o contexto do aluno no MongoDB (estamos fixando "José" para teste)
+        contexto_andragogico = obter_contexto_aluno("Seu José")
+        
+        # carrega a configuraçao original do seu arquivo tasks.yaml
+        config_orientar = self.tasks_config["orientar"].copy()
+        
+        # injeta o perfil do aluno no inicio da descriçao da tarefa
+        config_orientar["description"] = f"{contexto_andragogico}\n\n{config_orientar['description']}"
+        
+        # 4. retorna a tarefa agora "ciente" de quem é o aluno
+        return Task(config=config_orientar)
 
     @task
     def revisar(self) -> Task:
