@@ -4,7 +4,12 @@ version = "0.1.0"
 requires-python = ">=3.10, <3.12"
 dependencies = [
     "crewai[google-genai]>=1.15.33",
+    "datasets>=5.2.0",
+    "langchain-community>=0.4.2",
+    "langchain-ollama>=1.1.0",
+    "pandas>=2.3.3",
     "python-dotenv>=1.0.0",
+    "ragas>=0.4.3",
 ]
 
 [project.scripts]
