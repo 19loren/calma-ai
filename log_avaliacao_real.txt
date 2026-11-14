@@ -1,102 +1,9 @@
-[RAG] Gerando dataset para 30 pergunta(s)...
+[CREW] Gerando dataset para 10 pergunta(s)...
 
-[1/30] fonte=topico       | n_ctx=3 | A conta de luz era R$ 110 e teve aumento de 20%. Qual f
-    → answer: Porcentagem é uma fração com denominador 100: 10% = 10/100 = 0,10. Calcular x% de um valor é multiplicar o val...
-
-[2/30] fonte=topico       | n_ctx=3 | Uma loja dá 15% de desconto em uma geladeira de R$ 2.40
-    → answer: Porcentagem é uma fração com denominador 100: 10% = 10/100 = 0,10. Calcular x% de um valor é multiplicar o val...
-
-[3/30] fonte=topico       | n_ctx=3 | O salário de R$ 1.800 teve reajuste de 5%. Qual é o nov
-    → answer: Porcentagem é uma fração com denominador 100: 10% = 10/100 = 0,10. Calcular x% de um valor é multiplicar o val...
-
-[4/30] fonte=topico       | n_ctx=3 | Em uma receita proporcional, com 2 kg de farinha você f
-    → answer: Grandezas diretamente proporcionais: quando uma dobra, a outra também dobra. Grandezas inversamente proporcion...
-
-[5/30] fonte=topico       | n_ctx=3 | Em uma proporção inversa, 4 pedreiros fazem um muro em 
-    → answer: Grandezas diretamente proporcionais: quando uma dobra, a outra também dobra. Grandezas inversamente proporcion...
-
-[6/30] fonte=topico       | n_ctx=3 | O carro roda 12 km com 1 litro. Quantos litros gasta em
-    → answer: Grandezas diretamente proporcionais: quando uma dobra, a outra também dobra. Grandezas inversamente proporcion...
-
-[7/30] fonte=topico       | n_ctx=3 | Como calcular a fração 1/4 do salário de R$ 2.000 que v
-    → answer: Uma fração representa partes de um todo: o denominador diz em quantas partes o todo foi dividido e o numerador...
-
-[8/30] fonte=topico       | n_ctx=3 | Uma pizza foi dividida em 8 pedaços e você comeu 3. Que
-    → answer: Uma fração representa partes de um todo: o denominador diz em quantas partes o todo foi dividido e o numerador...
-
-[9/30] fonte=topico       | n_ctx=3 | Como somar duas frações com denominadores diferentes, c
-    → answer: Uma fração representa partes de um todo: o denominador diz em quantas partes o todo foi dividido e o numerador...
-
-[10/30] fonte=topico+faq   | n_ctx=5 | Você pegou R$ 500 emprestado a 3% ao mês de juros simpl
-    → answer: Porcentagem é uma fração com denominador 100: 10% = 10/100 = 0,10. Calcular x% de um valor é multiplicar o val...
-
-[11/30] fonte=topico+faq   | n_ctx=5 | Uma TV de R$ 1.200 foi parcelada com juros simples de 2
-    → answer: Juros simples: o juro de cada mês é sempre calculado sobre o valor inicial (capital). Juros = capital x taxa x...
-
-[12/30] fonte=topico       | n_ctx=3 | Uma sala tem 4 m por 5 m. Quantos m² de piso você preci
-    → answer: Perímetro é a medida do contorno: soma de todos os lados. Área é a medida da superfície; no retângulo, área = ...
-
-[13/30] fonte=topico       | n_ctx=3 | Um terreno retangular mede 10 m por 25 m. Quantos metro
-    → answer: Perímetro é a medida do contorno: soma de todos os lados. Área é a medida da superfície; no retângulo, área = ...
-
-[14/30] fonte=topico       | n_ctx=3 | Como encontro a ideia principal de um texto?
-    → answer: A ideia principal resume o assunto mais importante do texto. O título, as palavras que se repetem e o início d...
-
-[15/30] fonte=topico       | n_ctx=3 | Não sei por onde começar a interpretar este parágrafo.
-    → answer: A ideia principal resume o assunto mais importante do texto. O título, as palavras que se repetem e o início d...
-
-[16/30] fonte=topico       | n_ctx=3 | O botijão de gás custava R$ 110 e teve aumento de 20%. 
-    → answer: Porcentagem é uma fração com denominador 100: 10% = 10/100 = 0,10. Calcular x% de um valor é multiplicar o val...
-
-[17/30] fonte=topico       | n_ctx=3 | O que significa 25%?
-    → answer: Porcentagem é uma fração com denominador 100: 10% = 10/100 = 0,10. Calcular x% de um valor é multiplicar o val...
-
-[18/30] fonte=topico       | n_ctx=3 | Por que 50% é a metade?
-    → answer: Porcentagem é uma fração com denominador 100: 10% = 10/100 = 0,10. Calcular x% de um valor é multiplicar o val...
-
-[19/30] fonte=faq          | n_ctx=2 | Como calcular a distância entre dois pontos no plano ca
-    → answer: Para A = (x_A, y_A) e B = (x_B, y_B), a fórmula mostrada é d_AB = √[(x_B - x_A)² + (y_B - y_A)²]. O desenho re...
-
-[20/30] fonte=faq          | n_ctx=1 | Quais radiações aparecem no esquema do espectro eletrom
-    → answer: O esquema apresenta ondas de rádio, micro-ondas, infravermelho, luz visível, ultravioleta, raios X e raios gam...
-
-[21/30] fonte=faq          | n_ctx=1 | Qual é o objetivo da aula sobre radiações e saúde?
-    → answer: A aula propõe classificar radiações eletromagnéticas por frequência, fontes e aplicações e discutir seus usos ...
-
-[22/30] fonte=faq          | n_ctx=1 | Quais problemas socioambientais urbanos são abordados?
-    → answer: O material destaca lixo, poluição, enchentes e falta de saneamento básico nas cidades brasileiras.
-
-[23/30] fonte=faq          | n_ctx=1 | Como resolver o problema do investimento de Antonio e B
-    → answer: Chamando os investimentos de a e b, o sistema é a + b = 30.000 e b = a + 2.000. Substituindo, 2a + 2.000 = 30....
-
-[24/30] fonte=faq          | n_ctx=1 | Em que dia Fernanda pode retirar o exame após 20 dias c
-    → answer: Na terça-feira. A resolução usa a repetição semanal e o resto da divisão por sete para localizar o vigésimo di...
-
-[25/30] fonte=faq          | n_ctx=3 | Quais fontes não renováveis são citadas na síntese?
-    → answer: A aula cita combustão e fissão de material radioativo, como urânio. Em ambos os esquemas, aparece a produção d...
-
-[26/30] fonte=topico+faq   | n_ctx=6 | O que é um texto de divulgação científica?
-    → answer: A ideia principal resume o assunto mais importante do texto. O título, as palavras que se repetem e o início d...
-
-[27/30] fonte=faq          | n_ctx=2 | Como se calcula a amplitude em um gráfico periódico?
-    → answer: A amplitude corresponde à metade da diferença entre o valor máximo e o mínimo: A = (máximo - mínimo) / 2.
-
-[28/30] fonte=faq          | n_ctx=1 | Qual é a diferença entre fonte primária e secundária de
-    → answer: A fonte primária produz luz própria, como o Sol ou uma lâmpada acesa. A secundária reflete luz recebida de out...
-
-[29/30] fonte=faq          | n_ctx=3 | Qual relação central é proposta na aula Solo, saúde e a
-    → answer: A aula propõe compreender a inter-relação entre qualidade do solo, saneamento básico e saúde.
-
-[30/30] fonte=topico+faq   | n_ctx=6 | Qual é a diferença entre juros simples e compostos?
-    → answer: Juros simples: o juro de cada mês é sempre calculado sobre o valor inicial (capital). Juros = capital x taxa x...
-
-Dataset salvo em dataset_ragas_real.json
-
-[RESUMO] Distribuição das fontes de contexto:
-  topico         : 16
-  faq            : 10
-  topico+faq     : 4
-
-[RAGAS] Avaliando 30 pergunta(s)...
-
-Evaluating:   0%|          | 0/120 [00:00<?, ?it/s]Evaluating:   1%|          | 1/120 [02:23<4:45:27, 143.93s/it]Evaluating:   2%|1         | 2/120 [03:02<2:41:24, 82.07s/it] Evaluating:   2%|2         | 3/120 [03:57<2:15:20, 69.40s/it]Evaluating:   3%|3         | 4/120 [04:36<1:51:16, 57.56s/it]Evaluating:   4%|4         | 5/120 [05:04<1:30:14, 47.09s/it]Evaluating:   5%|5         | 6/120 [05:11<1:03:20, 33.34s/it]Evaluating:   6%|5         | 7/120 [05:46<1:03:40, 33.81s/it]Evaluating:   7%|6         | 8/120 [06:00<51:23, 27.54s/it]  
+Using an approximate input token count for model 'qwen2.5:1.5b': assuming one token per four characters because a native token count is unavailable.
+The context window of model 'qwen2.5:1.5b' is unknown, so CrewAI assumes 8,192 tokens (6,963 usable). If the model's window is different, pass it as LLM(model=..., context_window_size=<tokens>).
+WARNING:crewai.llms.base_llm:Using an approximate input token count for model 'qwen2.5:1.5b': assuming one token per four characters because a native token count is unavailable.
+WARNING:crewai.llms.base_llm:Using an approximate input token count for model 'qwen2.5:1.5b': assuming one token per four characters because a native token count is unavailable.
+WARNING:crewai.llms.base_llm:Using an approximate input token count for model 'qwen2.5:1.5b': assuming one token per four characters because a native token count is unavailable.
+WARNING:crewai.llms.base_llm:Using an approximate input token count for model 'qwen2.5:1.5b': assuming one token per four characters because a native token count is unavailable.
+WARNING:crewai.llms.base_llm:Using an approximate input token count for model 'qwen2.5:1.5b': assuming one token per four characters because a native token count is unavailable.
