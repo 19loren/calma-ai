@@ -1,0 +1,9 @@
+[CREW] Gerando dataset para 10 pergunta(s)...
+
+Using an approximate input token count for model 'qwen2.5:1.5b': assuming one token per four characters because a native token count is unavailable.
+The context window of model 'qwen2.5:1.5b' is unknown, so CrewAI assumes 8,192 tokens (6,963 usable). If the model's window is different, pass it as LLM(model=..., context_window_size=<tokens>).
+WARNING:crewai.llms.base_llm:Using an approximate input token count for model 'qwen2.5:1.5b': assuming one token per four characters because a native token count is unavailable.
+WARNING:crewai.llms.base_llm:Using an approximate input token count for model 'qwen2.5:1.5b': assuming one token per four characters because a native token count is unavailable.
+WARNING:crewai.llms.base_llm:Using an approximate input token count for model 'qwen2.5:1.5b': assuming one token per four characters because a native token count is unavailable.
+WARNING:crewai.llms.base_llm:Using an approximate input token count for model 'qwen2.5:1.5b': assuming one token per four characters because a native token count is unavailable.
+WARNING:crewai.llms.base_llm:Using an approximate input token count for model 'qwen2.5:1.5b': assuming one token per four characters because a native token count is unavailable.
