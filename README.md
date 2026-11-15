@@ -130,6 +130,8 @@ O CLI pede o identificador do estudante, a dúvida (ou tentativa) e, opcionalmen
 o conteúdo curricular e o contexto do dia a dia.
 Depois de cada resposta, a conversa continua; digite `sair` no campo da dúvida para
 encerrar. O histórico é consultado para contextualizar os próximos turnos.
+Na primeira consulta a uma FAQ, os pesos do modelo de embeddings são baixados para
+`.venv/hf-cache` (ou para o caminho definido por `HF_HOME`).
 
 ## Testes
 
@@ -150,8 +152,11 @@ python scripts/ml/prep_eja.py --input-dir "C:\caminho\para\apresentacoes"
 O pré-processamento grava a planilha estruturada e os conjuntos de embeddings
 em `data/processed`. Para supervisionar o modelo, preencha a coluna `categoria`
 na planilha gerada e rode o pré-processamento novamente; os rótulos anotados
-para os slides correspondentes serão preservados nos arquivos `.npy`. Depois,
-treine e avalie o MLP:
+para os slides correspondentes serão preservados. Os conjuntos são separados por
+apresentação com `StratifiedGroupKFold`: slides de um mesmo arquivo não podem
+aparecer em treino, validação e teste. São necessárias pelo menos três
+apresentações distintas por categoria. O script salva também os grupos de cada
+conjunto para auditoria. Depois, treine e avalie o MLP:
 
 ```powershell
 python scripts/ml/treino_mlp_eja.py
@@ -159,7 +164,10 @@ python scripts/ml/treino_mlp_eja.py
 
 Os gráficos são salvos em `resultados/sup/graficos` e o modelo em
 `data/processed/modelo_mlp_eja.pkl`. A categoria inicial de cada slide é `0`.
-O SMOTE é ignorado com aviso quando não há classes suficientes para balancear.
+O modelo é avaliado na validação e no teste final com F1-macro; o teste não é
+usado para ajuste. A curva de aprendizado também usa folds agrupados por
+apresentação. O SMOTE é aplicado somente ao treino e ignorado com aviso quando
+não há classes suficientes para balancear.
 As dependências específicas desses utilitários estão listadas no início de cada
 script; elas não são necessárias para executar o tutor.
 
@@ -172,14 +180,33 @@ metadados (ID, tema, fonte, PDF, páginas e origem) formam um único registro: a
 dividi-las ou sobrepor fragmentos separaria informações que já são unidades
 semânticas completas. Não há chunking adicional nem overlap.
 
-A recuperação usa vetores TF-IDF esparsos, similaridade de cosseno e normalização
-de acentos; o índice em memória é adequado a esta base pequena e não exige modelo
-denso nem serviço externo. O BERT português em `prep_eja.py` continua reservado à
-classificação MLP dos slides e não é usado para recuperar FAQs. Para evitar falsos
-positivos, consultas com vários termos precisam compartilhar ao menos dois termos
-de conteúdo; resultados com pontuação até 25% da primeira são sinalizados como
-ambíguos. Termos únicos que aparecem em temas diferentes também são ambíguos. O
-agente deve apoiar fatos do material apenas nas FAQs retornadas.
+A recuperação usa embeddings do modelo
+`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`, similaridade de
+cosseno e cache em memória do índice. O modelo multilíngue atende consultas em
+português; os pesos são carregados sob demanda. O padrão é salvar os pesos em
+`.venv/hf-cache` quando a aplicação roda dentro de um ambiente virtual. Defina
+`HF_HOME` para escolher outro cache e `CALMA_EMBEDDING_MODEL` para substituir o
+modelo. O BERT de `prep_eja.py` permanece separado e é usado na classificação de
+slides.
+
+O limiar mínimo padrão (`CALMA_FAQ_MIN_SIMILARITY`) e a margem de ambiguidade
+(`CALMA_FAQ_AMBIGUITY_MARGIN_RATIO`) foram calibrados com o conjunto `val` do
+dataset. Para repetir a avaliação:
+
+```powershell
+uv run python scripts/avaliar_faqs.py
+```
+
+O script mede P@1, R@1 e F1@1 em `train`, `val` e `test`; calibra os dois
+limiares somente em `val` e deixa `test` para avaliação final. Alvos cujo ID não
+existe na base FAQ são contabilizados à parte, pois não podem ser recuperados por
+este corpus. `meta.tipo` indica suporte no contexto original, não
+relevância para a busca: IDs presentes no corpus são alvos de recuperação nos dois
+rótulos. O dataset não contém rótulos específicos de ambiguidade; a margem é
+escolhida pelo F1 da decisão de recuperação/abstenção e precisa ser reavaliada
+quando a base ou o modelo mudar. O agente deve apoiar fatos do material apenas
+nas FAQs retornadas. Para detalhes do fluxo e dos componentes, consulte
+[`docs/arquitetura_rag.md`](docs/arquitetura_rag.md).
 
 O arquivo `data/faq/FAQ_CONSOLIDADO.md` é a base versionada usada por padrão. Para
 usar outra localização, defina `CALMA_FAQ_PATH`; se o arquivo não estiver disponível,

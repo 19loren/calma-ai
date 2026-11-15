@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -60,7 +61,24 @@ def registrar_interacao(estudante_id: str, pergunta: str, diagnostico: Diagnosti
 
     arquivo = _arquivo_perfil(estudante_id)
     arquivo.parent.mkdir(parents=True, exist_ok=True)
-    arquivo.write_text(json.dumps(perfil, ensure_ascii=False, indent=2), encoding="utf-8")
+    arquivo_temporario: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=arquivo.parent,
+            prefix=f".{arquivo.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as temporario:
+            arquivo_temporario = Path(temporario.name)
+            json.dump(perfil, temporario, ensure_ascii=False, indent=2)
+            temporario.flush()
+            os.fsync(temporario.fileno())
+        os.replace(arquivo_temporario, arquivo)
+    finally:
+        if arquivo_temporario is not None and arquivo_temporario.exists():
+            arquivo_temporario.unlink()
     return arquivo
 
 

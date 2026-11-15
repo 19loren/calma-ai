@@ -13,7 +13,7 @@ import pandas as pd
 from pptx import Presentation
 from pptx.slide import Slide
 from sentence_transformers import SentenceTransformer
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedGroupKFold
 
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
@@ -99,38 +99,114 @@ def extrair_apresentacoes(pasta: Path) -> pd.DataFrame:
 def dividir_e_salvar(
     embeddings: np.ndarray,
     categorias: np.ndarray,
+    grupos: np.ndarray,
     pasta_saida: Path = OUTPUT_DIR,
 ) -> None:
-    """Divide as amostras em treino, validação e teste e grava os arrays."""
+    """Cria splits estratificados sem separar slides da mesma apresentação."""
+    embeddings = np.asarray(embeddings)
+    categorias = np.asarray(categorias)
+    if embeddings.ndim != 2 or categorias.ndim != 1:
+        raise ValueError("Embeddings devem ser 2D e categorias devem ser 1D.")
     if len(embeddings) < 3:
         raise ValueError("São necessários pelo menos 3 slides para criar os três conjuntos.")
     if len(embeddings) != len(categorias):
         raise ValueError("A quantidade de embeddings e categorias precisa ser igual.")
+    grupos = np.asarray(grupos)
+    if grupos.ndim != 1 or len(grupos) != len(categorias):
+        raise ValueError("Cada slide precisa ter exatamente um grupo de apresentação.")
+    if any(not str(grupo).strip() for grupo in grupos):
+        raise ValueError("O nome da apresentação de cada slide precisa estar preenchido.")
+    if not np.issubdtype(categorias.dtype, np.number) or not np.isfinite(categorias).all():
+        raise ValueError("As categorias precisam ser rótulos numéricos finitos.")
+    if (
+        not np.issubdtype(embeddings.dtype, np.number)
+        or not np.isfinite(embeddings).all()
+    ):
+        raise ValueError("As matrizes de embeddings contêm valores não finitos.")
 
-    X_train_val, X_test, y_train_val, y_test = train_test_split(
-        embeddings,
-        categorias,
-        test_size=0.1,
+    rotulos = np.unique(categorias)
+    grupos_por_rotulo = [
+        len(np.unique(grupos[categorias == rotulo])) for rotulo in rotulos
+    ]
+    menor_quantidade_grupos = min(grupos_por_rotulo)
+    if menor_quantidade_grupos < 3:
+        raise ValueError(
+            "São necessárias pelo menos três apresentações distintas por categoria "
+            "para criar treino, validação e teste sem vazamento."
+        )
+
+    outer_folds = min(10, menor_quantidade_grupos)
+    outer = StratifiedGroupKFold(
+        n_splits=outer_folds,
+        shuffle=True,
         random_state=RANDOM_STATE,
     )
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_train_val,
-        y_train_val,
-        test_size=0.1 / 0.9,
-        random_state=RANDOM_STATE,
-    )
+    splits = None
+    for treino_validacao_idx, teste_idx in outer.split(embeddings, categorias, grupos):
+        y_treino_validacao = categorias[treino_validacao_idx]
+        grupos_treino_validacao = grupos[treino_validacao_idx]
+        minimo_interno = min(
+            len(np.unique(grupos_treino_validacao[y_treino_validacao == rotulo]))
+            for rotulo in rotulos
+        )
+        if minimo_interno < 2:
+            continue
+
+        inner = StratifiedGroupKFold(
+            n_splits=min(9, minimo_interno),
+            shuffle=True,
+            random_state=RANDOM_STATE + 1,
+        )
+        for treino_relativo, validacao_relativa in inner.split(
+            embeddings[treino_validacao_idx],
+            y_treino_validacao,
+            grupos_treino_validacao,
+        ):
+            treino_idx = treino_validacao_idx[treino_relativo]
+            validacao_idx = treino_validacao_idx[validacao_relativa]
+            indices = (treino_idx, validacao_idx, teste_idx)
+            if any(set(np.unique(categorias[index])) != set(rotulos) for index in indices):
+                continue
+            grupos_split = [set(grupos[index]) for index in indices]
+            if (
+                grupos_split[0] & grupos_split[1]
+                or grupos_split[0] & grupos_split[2]
+                or grupos_split[1] & grupos_split[2]
+            ):
+                raise RuntimeError("Uma apresentação apareceu em mais de um conjunto.")
+            splits = indices
+            break
+        if splits is not None:
+            break
+
+    if splits is None:
+        raise ValueError(
+            "Não foi possível criar splits estratificados com todas as categorias "
+            "representadas. Adicione apresentações rotuladas por categoria."
+        )
+
+    treino_idx, validacao_idx, teste_idx = splits
+    conjuntos = {
+        "X_train_eja_emb.npy": embeddings[treino_idx],
+        "X_val_eja_emb.npy": embeddings[validacao_idx],
+        "X_test_eja_emb.npy": embeddings[teste_idx],
+        "y_train_eja.npy": categorias[treino_idx],
+        "y_val_eja.npy": categorias[validacao_idx],
+        "y_test_eja.npy": categorias[teste_idx],
+        "groups_train_eja.npy": grupos[treino_idx].astype(str),
+        "groups_val_eja.npy": grupos[validacao_idx].astype(str),
+        "groups_test_eja.npy": grupos[teste_idx].astype(str),
+    }
 
     pasta_saida.mkdir(parents=True, exist_ok=True)
-    conjuntos = {
-        "X_train_eja_emb.npy": X_train,
-        "X_val_eja_emb.npy": X_val,
-        "X_test_eja_emb.npy": X_test,
-        "y_train_eja.npy": y_train,
-        "y_val_eja.npy": y_val,
-        "y_test_eja.npy": y_test,
-    }
     for nome, valores in conjuntos.items():
         np.save(pasta_saida / nome, valores)
+    LOGGER.info(
+        "Splits agrupados salvos: %s slides de treino, %s de validação e %s de teste.",
+        len(treino_idx),
+        len(validacao_idx),
+        len(teste_idx),
+    )
 
 
 def preservar_categorias(dataframe: pd.DataFrame, arquivo_excel: Path) -> pd.DataFrame:
@@ -176,7 +252,11 @@ def preparar_dados(pasta_entrada: Path) -> Path:
         show_progress_bar=True,
     )
     categorias = dataframe["categoria"].to_numpy(dtype=np.int64)
-    dividir_e_salvar(embeddings, categorias)
+    dividir_e_salvar(
+        embeddings,
+        categorias,
+        dataframe["arquivo"].to_numpy(dtype=str),
+    )
     LOGGER.info("Planilha e embeddings salvos em %s", OUTPUT_DIR)
     return arquivo_excel
 

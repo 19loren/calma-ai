@@ -21,9 +21,15 @@ Cada linha é um objeto JSON com:
   `negativo` indica que o contexto não contém a informação e a resposta deve
   declarar que não a encontrou.
 
-Os três conjuntos usam IDs distintos. Os arquivos são dados de referência e não
-são carregados pelo tutor nem por um script de treinamento ou avaliação existente
-neste repositório. A base de FAQs consultada pelo tutor fica separadamente em
+Os três conjuntos usam IDs distintos. O script `scripts/avaliar_faqs.py` usa os
+três arquivos para avaliar o retriever neural da base de FAQs; ele calibra os
+limiares somente em `val` e reserva `test` para a avaliação final. Para exemplos
+com IDs presentes no corpus, `meta.id` identifica a FAQ esperada para recuperação,
+independentemente do rótulo `meta.tipo`. Esse rótulo indica se a resposta está
+apoiada pelo contexto fornecido no exemplo; não é um rótulo de relevância para a
+busca na base completa. IDs ausentes do corpus são contabilizados como casos sem
+alvo recuperável e usados para medir abstenção. A base de FAQs consultada pelo
+tutor fica separadamente em
 [`../../faq/FAQ_CONSOLIDADO.md`](../../faq/FAQ_CONSOLIDADO.md).
 
 Mantenha os conjuntos separados ao criar um pipeline futuro: use treino para

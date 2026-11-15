@@ -1,33 +1,22 @@
-"""Leitura e recuperação lexical das FAQs usadas para identificar materiais."""
+"""Leitura e recuperação semântica das FAQs usadas para identificar materiais."""
 
 from __future__ import annotations
 
-import math
 import os
 import re
-import unicodedata
-from collections import Counter
+import sys
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from typing import Any, Sequence
+
+import numpy as np
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
 DEFAULT_FAQ_PATH = ROOT_DIR / "data" / "faq" / "FAQ_CONSOLIDADO.md"
-AMBIGUITY_MARGIN_RATIO = 0.25
-
-_DOCUMENT_HEADER = re.compile(r"^# Documento \d+:\s*(.+?)\s*$")
-_QUESTION_HEADER = re.compile(r"^##\s+(.+?)\s*$")
-_METADATA_LINE = re.compile(r"^\*\*(.+?):\*\*\s*(.*)$")
-_TOKEN = re.compile(r"[a-z0-9]+")
-_STOPWORDS = frozenset(
-    {
-        "a", "ao", "aos", "as", "com", "como", "da", "das", "de", "dos",
-        "e", "em", "entre", "essa", "esse", "esta", "este", "foi", "na",
-        "nas", "no", "nos", "o", "os", "para", "pela", "pelas", "pelo",
-        "pelos", "por", "qual", "quais", "que", "se", "sua", "suas", "seu",
-        "seus", "um", "uma", "umas", "uns",
-    }
-)
+DEFAULT_EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+MIN_SIMILARITY = 0.625
+AMBIGUITY_MARGIN_RATIO = 0.0
 
 
 @dataclass(frozen=True)
@@ -53,6 +42,11 @@ class FAQMatch:
 class FAQSearch:
     matches: tuple[FAQMatch, ...]
     ambiguous: bool
+
+
+_DOCUMENT_HEADER = re.compile(r"^# Documento \d+:\s*(.+?)\s*$")
+_QUESTION_HEADER = re.compile(r"^##\s+(.+?)\s*$")
+_METADATA_LINE = re.compile(r"^\*\*(.+?):\*\*\s*(.*)$")
 
 
 def faq_path() -> Path:
@@ -139,81 +133,154 @@ def parse_faqs(markdown: str) -> tuple[FAQ, ...]:
     return tuple(documents)
 
 
-def _normalizar(texto: str) -> str:
-    decomposed = unicodedata.normalize("NFKD", texto)
-    return "".join(char for char in decomposed if not unicodedata.combining(char)).lower()
+@lru_cache(maxsize=4)
+def _load_model(model_name: str) -> Any:
+    from sentence_transformers import SentenceTransformer
+
+    cache_folder = os.getenv("HF_HUB_CACHE")
+    if cache_folder is None:
+        hf_home = os.getenv("HF_HOME")
+        if hf_home is None and sys.prefix != sys.base_prefix:
+            hf_home = str(Path(sys.prefix) / "hf-cache")
+        if hf_home is not None:
+            cache_folder = str(Path(hf_home) / "hub")
+    return SentenceTransformer(model_name, cache_folder=cache_folder)
 
 
-def _raw_tokens(texto: str) -> list[str]:
-    return _TOKEN.findall(_normalizar(texto))
-
-
-def _tokens(texto: str) -> list[str]:
-    return [
-        token
-        for token in _raw_tokens(texto)
-        if len(token) > 1 and token not in _STOPWORDS
-    ]
-
-
-def _features(texto: str) -> Counter[str]:
-    raw_tokens = _raw_tokens(texto)
-    tokens = [token for token in raw_tokens if len(token) > 1 and token not in _STOPWORDS]
-    content_tokens = set(tokens)
-    features: Counter[str] = Counter(f"w:{token}" for token in tokens)
-    features.update(
-        f"b:{left}_{right}"
-        for left, right in zip(raw_tokens, raw_tokens[1:])
-        if left in content_tokens and right in content_tokens
+def _faq_text(faq: FAQ) -> str:
+    return (
+        f"Pergunta: {faq.question}\n"
+        f"Resposta: {faq.answer}\n"
+        f"Tema: {faq.topic}\n"
+        f"Material: {faq.document}"
     )
-    return features
 
 
-def _weighted_features(faq: FAQ) -> Counter[str]:
-    features: Counter[str] = Counter()
-    for text, weight in (
-        (faq.question, 2.0),
-        (faq.answer, 1.0),
-        (faq.topic, 1.5),
-        (faq.document, 0.75),
-    ):
-        for feature, count in _features(text).items():
-            features[feature] += count * weight
-    return features
+def _encode(model: Any, texts: Sequence[str]) -> np.ndarray:
+    embeddings = np.asarray(
+        model.encode(
+            list(texts),
+            batch_size=32,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        ),
+        dtype=np.float32,
+    )
+    if embeddings.ndim != 2 or embeddings.shape[0] != len(texts):
+        raise ValueError("O modelo retornou uma matriz de embeddings inválida.")
+    if not np.isfinite(embeddings).all():
+        raise ValueError("O modelo retornou embeddings não finitos.")
+
+    norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+    return np.divide(embeddings, norms, out=np.zeros_like(embeddings), where=norms > 0)
 
 
-def _normalize_vector(vector: dict[str, float]) -> dict[str, float]:
-    norm = math.sqrt(sum(value * value for value in vector.values()))
-    if not norm:
-        return {}
-    return {feature: value / norm for feature, value in vector.items()}
+def _float_setting(name: str, default: float, *, minimum: float, maximum: float) -> float:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    try:
+        value = float(raw)
+    except ValueError as erro:
+        raise ValueError(f"{name} precisa ser um número entre {minimum} e {maximum}.") from erro
+    if not minimum <= value <= maximum:
+        raise ValueError(f"{name} precisa ser um número entre {minimum} e {maximum}.")
+    return value
 
 
 @lru_cache(maxsize=4)
-def _load_index(path: Path, modified_ns: int, size: int) -> tuple[
-    tuple[FAQ, ...], tuple[dict[str, float], ...], dict[str, float]
-]:
+def _load_index(
+    path: Path,
+    modified_ns: int,
+    size: int,
+    model_name: str,
+) -> tuple[tuple[FAQ, ...], np.ndarray]:
     del modified_ns, size
     faqs = parse_faqs(path.read_text(encoding="utf-8"))
-    raw_vectors = tuple(_weighted_features(faq) for faq in faqs)
-    document_frequency: Counter[str] = Counter(
-        feature for vector in raw_vectors for feature in vector
+    embeddings = _encode(_load_model(model_name), [_faq_text(faq) for faq in faqs])
+    return faqs, embeddings
+
+
+def _model_name() -> str:
+    return os.getenv("CALMA_EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL).strip()
+
+
+def _is_ambiguous(matches: Sequence[FAQMatch], margin_ratio: float) -> bool:
+    return (
+        len(matches) > 1
+        and matches[0].score - matches[1].score
+        <= matches[0].score * margin_ratio
     )
-    total_documents = len(faqs)
-    inverse_document_frequency = {
-        feature: math.log((total_documents + 1) / (frequency + 1)) + 1
-        for feature, frequency in document_frequency.items()
-    }
-    vectors = tuple(
-        _normalize_vector(
-            {
-                feature: (1 + math.log(count)) * inverse_document_frequency[feature]
-                for feature, count in vector.items()
-            }
+
+
+def search_many_faqs(
+    queries: Sequence[str],
+    *,
+    limit: int = 3,
+    path: Path | None = None,
+    min_similarity: float | None = None,
+    ambiguity_margin_ratio: float | None = None,
+) -> tuple[FAQSearch, ...]:
+    """Busca várias consultas em lote para avaliação, com o mesmo índice neural."""
+    if limit < 1:
+        raise ValueError("O limite de resultados precisa ser positivo.")
+    if not queries:
+        return ()
+    if any(not isinstance(query, str) for query in queries):
+        raise TypeError("Todas as consultas precisam ser textos.")
+
+    threshold = (
+        min_similarity
+        if min_similarity is not None
+        else _float_setting(
+            "CALMA_FAQ_MIN_SIMILARITY", MIN_SIMILARITY, minimum=0.0, maximum=1.0
         )
-        for vector in raw_vectors
     )
-    return faqs, vectors, inverse_document_frequency
+    margin_ratio = (
+        ambiguity_margin_ratio
+        if ambiguity_margin_ratio is not None
+        else _float_setting(
+            "CALMA_FAQ_AMBIGUITY_MARGIN_RATIO",
+            AMBIGUITY_MARGIN_RATIO,
+            minimum=0.0,
+            maximum=1.0,
+        )
+    )
+    if not 0.0 <= threshold <= 1.0:
+        raise ValueError("O limiar de similaridade precisa estar entre 0 e 1.")
+    if not 0.0 <= margin_ratio <= 1.0:
+        raise ValueError("A margem de ambiguidade precisa estar entre 0 e 1.")
+    if all(not query.strip() for query in queries):
+        return tuple(FAQSearch(matches=(), ambiguous=False) for _ in queries)
+
+    corpus_path = (path or faq_path()).resolve()
+    stat = corpus_path.stat()
+    model_name = _model_name()
+    faqs, faq_embeddings = _load_index(
+        corpus_path, stat.st_mtime_ns, stat.st_size, model_name
+    )
+    nonempty_indices = [index for index, query in enumerate(queries) if query.strip()]
+    query_embeddings = _encode(
+        _load_model(model_name), [queries[index] for index in nonempty_indices]
+    )
+    if query_embeddings.shape[1] != faq_embeddings.shape[1]:
+        raise ValueError("As dimensões dos embeddings de consulta e FAQ não coincidem.")
+
+    scores = query_embeddings @ faq_embeddings.T
+    results = [FAQSearch(matches=(), ambiguous=False) for _ in queries]
+    for row, query_index in enumerate(nonempty_indices):
+        ranked_indices = np.argsort(scores[row])[::-1][:limit]
+        matches = tuple(
+            FAQMatch(faq=faqs[index], score=float(scores[row, index]))
+            for index in ranked_indices
+            if scores[row, index] > 0 and scores[row, index] >= threshold
+        )
+        results[query_index] = FAQSearch(
+            matches=matches,
+            ambiguous=_is_ambiguous(matches, margin_ratio),
+        )
+    return tuple(results)
 
 
 def search_faqs(
@@ -221,58 +288,14 @@ def search_faqs(
     *,
     limit: int = 3,
     path: Path | None = None,
+    min_similarity: float | None = None,
+    ambiguity_margin_ratio: float | None = None,
 ) -> FAQSearch:
-    """Ranqueia FAQs por cosseno TF-IDF; não cria vetores densos nem divide pares."""
-    if limit < 1:
-        raise ValueError("O limite de resultados precisa ser positivo.")
-    corpus_path = (path or faq_path()).resolve()
-    stat = corpus_path.stat()
-    faqs, vectors, idf = _load_index(corpus_path, stat.st_mtime_ns, stat.st_size)
-    query_features = _features(query)
-    query_vector = _normalize_vector(
-        {
-            feature: (1 + math.log(count)) * idf[feature]
-            for feature, count in query_features.items()
-            if feature in idf
-        }
-    )
-    if not query_vector:
-        return FAQSearch(matches=(), ambiguous=False)
-
-    query_words = {feature for feature in query_features if feature.startswith("w:")}
-
-    def has_enough_query_terms(faq: FAQ, vector: dict[str, float]) -> bool:
-        shared_words = query_words.intersection(vector)
-        if len(shared_words) >= 2:
-            return True
-        if len(query_words) == 1:
-            term = next(iter(query_words))[2:]
-            return term in _tokens(faq.question) or term in _tokens(faq.topic)
-        return False
-
-    ranked = sorted(
-        (
-            FAQMatch(
-                faq=faq,
-                score=sum(
-                    weight * vector.get(feature, 0.0)
-                    for feature, weight in query_vector.items()
-                ),
-            )
-            for faq, vector in zip(faqs, vectors)
-            if has_enough_query_terms(faq, vector)
-        ),
-        key=lambda result: result.score,
-        reverse=True,
-    )
-    matches = tuple(result for result in ranked if result.score > 0)[:limit]
-    one_term_spans_topics = (
-        len(query_words) == 1 and len({match.faq.topic for match in matches}) > 1
-    )
-    close_scores = (
-        len(matches) > 1
-        and matches[0].score - matches[1].score
-        <= matches[0].score * AMBIGUITY_MARGIN_RATIO
-    )
-    ambiguous = one_term_spans_topics or close_scores
-    return FAQSearch(matches=matches, ambiguous=ambiguous)
+    """Ranqueia FAQs por similaridade de cosseno entre embeddings normalizados."""
+    return search_many_faqs(
+        [query],
+        limit=limit,
+        path=path,
+        min_similarity=min_similarity,
+        ambiguity_margin_ratio=ambiguity_margin_ratio,
+    )[0]

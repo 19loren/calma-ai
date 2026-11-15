@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -5,10 +6,16 @@ from crewai import CrewOutput
 from crewai.types.streaming import CrewStreamingOutput
 from dotenv import load_dotenv
 
-from calma_ai.crew import CalmaAI
+from calma_ai.crew import CalmaAI, validar_mensagem_final
 from calma_ai.models import Diagnostico, RespostaRevisada
 from calma_ai.reflexo import decidir, normalizar
 from calma_ai.tools.progresso import registrar_interacao
+
+LOGGER = logging.getLogger(__name__)
+RESPOSTA_SEGURA_FALHA = (
+    "Tive um problema técnico para validar a resposta agora. "
+    "Você pode tentar novamente em instantes?"
+)
 
 PADROES = {
     "student_id": "estudante",
@@ -59,13 +66,48 @@ def processar_turno(inputs: dict[str, str]) -> None:
     inputs["reflex_analysis"] = reflexo.resumo()
     inputs["reflex_response"] = reflexo.resposta or ""
 
-    resultado = executar_equipe(inputs)
+    try:
+        resultado = executar_equipe(inputs)
+    except Exception:
+        LOGGER.exception("Falha ao executar a equipe de tutoria.")
+        print(f"\nTutor:\n{RESPOSTA_SEGURA_FALHA}\n")
+        return
 
-    diagnostico = resultado.tasks_output[0].pydantic
-    resposta = resultado.pydantic
+    task_outputs = getattr(resultado, "tasks_output", ())
+    resposta = getattr(resultado, "pydantic", None)
+    if not task_outputs:
+        LOGGER.error("A equipe não retornou resultados de tarefas.")
+        print(f"\nTutor:\n{RESPOSTA_SEGURA_FALHA}\n")
+        return
 
-    if isinstance(diagnostico, Diagnostico):
-        arquivo = registrar_interacao(inputs["student_id"], inputs["student_question"], diagnostico)
+    diagnostico = getattr(task_outputs[0], "pydantic", None)
+    resposta_final = getattr(task_outputs[-1], "pydantic", None)
+    if (
+        not isinstance(diagnostico, Diagnostico)
+        or not isinstance(resposta, RespostaRevisada)
+        or not isinstance(resposta_final, RespostaRevisada)
+        or resposta != resposta_final
+    ):
+        LOGGER.error("A equipe retornou diagnóstico ou resposta final fora do formato esperado.")
+        print(f"\nTutor:\n{RESPOSTA_SEGURA_FALHA}\n")
+        return
+
+    valido, motivo = validar_mensagem_final(
+        task_outputs[-1],
+        resposta_esperada=diagnostico.resposta_esperada,
+    )
+    if not valido:
+        LOGGER.error("Resposta do tutor bloqueada pelo guardrail: %s", motivo)
+        print(f"\nTutor:\n{RESPOSTA_SEGURA_FALHA}\n")
+        return
+
+    try:
+        arquivo = registrar_interacao(
+            inputs["student_id"], inputs["student_question"], diagnostico
+        )
+    except OSError:
+        LOGGER.exception("Não foi possível salvar o progresso do estudante.")
+    else:
         if _debug_ativo():
             print(
                 f"[debug] tópico: {diagnostico.topico} | ação: "
@@ -73,12 +115,9 @@ def processar_turno(inputs: dict[str, str]) -> None:
             )
             print(f"[debug] progresso salvo em {arquivo}")
 
-    if isinstance(resposta, RespostaRevisada):
-        if _debug_ativo() and resposta.revelava_resposta:
-            print("[debug] o revisor ajustou uma mensagem que revelava a resposta.")
-        print(f"\nTutor:\n{resposta.mensagem}\n")
-    else:
-        print(f"\nTutor:\n{resultado.raw}\n")
+    if _debug_ativo() and resposta.revelava_resposta:
+        print("[debug] o revisor ajustou uma mensagem que revelava a resposta.")
+    print(f"\nTutor:\n{resposta.mensagem}\n")
 
 
 def run() -> None:

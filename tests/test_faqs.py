@@ -1,8 +1,10 @@
 import json
 
+import numpy as np
 import pytest
 
-from calma_ai.knowledge.faqs import parse_faqs, search_faqs
+import calma_ai.knowledge.faqs as faq_module
+from calma_ai.knowledge.faqs import parse_faqs, search_faqs, search_many_faqs
 from calma_ai.tools.conteudo import ConsultarConteudoTool
 
 FAQ_FIXTURE = """\
@@ -45,6 +47,48 @@ Por meio da família, da escola e de outros grupos, aprendemos e internalizamos 
 **Páginas do PDF / slides:** 10
 **Origem:** [Google Drive](https://docs.google.com/presentation/d/1nhn0qv12joYBKVHD-fOOHdRIS7tE8WAs/edit?usp=drivesdk&ouid=107159505966451091098&rtpof=true&sd=true)
 """
+
+
+class FakeEmbeddingModel:
+    def encode(self, texts, **_kwargs):
+        vectors = []
+        for text in texts:
+            normalized = text.lower()
+            if text.startswith("Pergunta:"):
+                if "desnaturalizar" in normalized:
+                    vector = [0, 1, 0, 0]
+                elif "socialização influencia" in normalized:
+                    vector = [0, 0, 1, 0]
+                elif "socialização" in normalized:
+                    vector = [1, 0, 0, 0]
+                else:
+                    vector = [0, 0, 0, 1]
+            elif "socialização e costumes" in normalized or normalized == "socialização":
+                vector = [1, 0, 1, 0]
+            elif "regras" in normalized and "sociedade" in normalized:
+                vector = [1, 0, 0, 0]
+            elif "aprendizagem" in normalized and "normas" in normalized:
+                vector = [1, 0, 0, 0]
+            elif "receita de bolo" in normalized:
+                vector = [0, 0, 0, 1]
+            elif "regras" in normalized:
+                vector = [0.8, 0.6, 0, 0]
+            else:
+                vector = [0, 0, 0, 0]
+            vectors.append(vector)
+        return np.asarray(vectors, dtype=np.float32)
+
+
+@pytest.fixture(autouse=True)
+def use_fake_embedding_model(monkeypatch):
+    fake_model = FakeEmbeddingModel()
+    monkeypatch.setattr(faq_module, "_load_model", lambda _model_name: fake_model)
+    monkeypatch.delenv("CALMA_EMBEDDING_MODEL", raising=False)
+    monkeypatch.delenv("CALMA_FAQ_MIN_SIMILARITY", raising=False)
+    monkeypatch.delenv("CALMA_FAQ_AMBIGUITY_MARGIN_RATIO", raising=False)
+    faq_module._load_index.cache_clear()
+    yield
+    faq_module._load_index.cache_clear()
 
 
 def test_parser_preserves_question_answer_and_source_metadata():
@@ -106,11 +150,39 @@ def test_single_term_matching_multiple_subjects_is_ambiguous(tmp_path):
 
     result = search_faqs("socialização", path=corpus)
 
-    assert {match.faq.topic for match in result.matches} == {
-        "Como pensar diferentes realidades",
-        "Desnaturalização",
-    }
+    assert {match.faq.id for match in result.matches} == {"cmsp-02-002", "cmsp-26-005"}
     assert result.ambiguous
+
+
+def test_retrieval_applies_minimum_similarity_threshold(tmp_path):
+    corpus = tmp_path / "faqs.md"
+    corpus.write_text(FAQ_FIXTURE, encoding="utf-8")
+
+    assert search_faqs("regras sociais", path=corpus, min_similarity=0.85).matches == ()
+    result = search_faqs("regras sociais", path=corpus, min_similarity=0.75)
+    assert result.matches[0].faq.id == "cmsp-02-002"
+
+
+def test_batch_retrieval_keeps_query_order_and_empty_queries(tmp_path):
+    corpus = tmp_path / "faqs.md"
+    corpus.write_text(FAQ_FIXTURE, encoding="utf-8")
+
+    results = search_many_faqs(
+        ["Como aprendemos regras e costumes para viver em sociedade?", "", "receita de bolo"],
+        path=corpus,
+    )
+
+    assert results[0].matches[0].faq.id == "cmsp-02-002"
+    assert results[1].matches == ()
+    assert results[2].matches == ()
+
+
+def test_retrieval_rejects_invalid_similarity_threshold(tmp_path):
+    corpus = tmp_path / "faqs.md"
+    corpus.write_text(FAQ_FIXTURE, encoding="utf-8")
+
+    with pytest.raises(ValueError, match="entre 0 e 1"):
+        search_faqs("socialização", path=corpus, min_similarity=1.1)
 
 
 def test_conteudo_tool_returns_grounded_faq_and_ambiguity_status(tmp_path, monkeypatch):
