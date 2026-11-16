@@ -9,19 +9,59 @@
     "Como calcular a fração 1/4 do salário de R$ 2.000 que vai pro aluguel?",
     "Uma pizza foi dividida em 8 pedaços e você comeu 3. Que fração da pizza sobrou?",
     "Como somar duas frações com denominadores diferentes, como 1/2 com 1/3?",
-    "Você pegou R$ 500 emprestado a 3% ao mês de juros simples. Quanto pagará de juros em 4 meses?"
+    "Você pegou R$ 500 emprestado a 3% ao mês de juros simples. Quanto pagará de juros em 4 meses?",
+    "Uma TV de R$ 1.200 foi parcelada com juros simples de 2% ao mês por 6 meses. Qual é o valor total pago?",
+    "Uma sala tem 4 m por 5 m. Quantos m² de piso você precisa comprar?",
+    "Um terreno retangular mede 10 m por 25 m. Quantos metros de cerca são necessários para contorná-lo?",
+    "Como encontro a ideia principal de um texto?",
+    "Não sei por onde começar a interpretar este parágrafo.",
+    "O botijão de gás custava R$ 110 e teve aumento de 20%. Qual foi o valor do aumento?",
+    "O que significa 25%?",
+    "Por que 50% é a metade?",
+    "Como calcular a distância entre dois pontos no plano cartesiano?",
+    "Quais radiações aparecem no esquema do espectro eletromagnético?",
+    "Qual é o objetivo da aula sobre radiações e saúde?",
+    "Quais problemas socioambientais urbanos são abordados?",
+    "Como resolver o problema do investimento de Antonio e Bruna?",
+    "Em que dia Fernanda pode retirar o exame após 20 dias corridos?",
+    "Quais fontes não renováveis são citadas na síntese?",
+    "O que é um texto de divulgação científica?",
+    "Como se calcula a amplitude em um gráfico periódico?",
+    "Qual é a diferença entre fonte primária e secundária de luz?",
+    "Qual relação central é proposta na aula Solo, saúde e ambiente?",
+    "Qual é a diferença entre juros simples e compostos?"
   ],
   "answer": [
-    "Erro no kickoff: Error code: 500 - {'error': {'message': \"error starting llama-server: llama-server binary not found (checked: /usr/local/lib/ollama/llama-server, /usr/local/bin/build/lib/ollama/llama-server, /usr/local/bin/dist/linux-amd64/lib/ollama/llama-server, /usr/local/bin/dist/linux_amd64/lib/ollama/llama-server, /workspaces/calma-ai/build/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux-amd64/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux_amd64/lib/ollama/llama-server). Run 'cmake -S llama/server --preset cpu && cmake --build --preset cpu' first \", 'type': 'api_error', 'param': None, 'code': None}}",
-    "Erro no kickoff: Error code: 500 - {'error': {'message': \"error starting llama-server: llama-server binary not found (checked: /usr/local/lib/ollama/llama-server, /usr/local/bin/build/lib/ollama/llama-server, /usr/local/bin/dist/linux-amd64/lib/ollama/llama-server, /usr/local/bin/dist/linux_amd64/lib/ollama/llama-server, /workspaces/calma-ai/build/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux-amd64/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux_amd64/lib/ollama/llama-server). Run 'cmake -S llama/server --preset cpu && cmake --build --preset cpu' first \", 'type': 'api_error', 'param': None, 'code': None}}",
-    "Erro no kickoff: Error code: 500 - {'error': {'message': \"error starting llama-server: llama-server binary not found (checked: /usr/local/lib/ollama/llama-server, /usr/local/bin/build/lib/ollama/llama-server, /usr/local/bin/dist/linux-amd64/lib/ollama/llama-server, /usr/local/bin/dist/linux_amd64/lib/ollama/llama-server, /workspaces/calma-ai/build/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux-amd64/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux_amd64/lib/ollama/llama-server). Run 'cmake -S llama/server --preset cpu && cmake --build --preset cpu' first \", 'type': 'api_error', 'param': None, 'code': None}}",
-    "Erro no kickoff: Error code: 500 - {'error': {'message': \"error starting llama-server: llama-server binary not found (checked: /usr/local/lib/ollama/llama-server, /usr/local/bin/build/lib/ollama/llama-server, /usr/local/bin/dist/linux-amd64/lib/ollama/llama-server, /usr/local/bin/dist/linux_amd64/lib/ollama/llama-server, /workspaces/calma-ai/build/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux-amd64/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux_amd64/lib/ollama/llama-server). Run 'cmake -S llama/server --preset cpu && cmake --build --preset cpu' first \", 'type': 'api_error', 'param': None, 'code': None}}",
-    "Erro no kickoff: Error code: 500 - {'error': {'message': \"error starting llama-server: llama-server binary not found (checked: /usr/local/lib/ollama/llama-server, /usr/local/bin/build/lib/ollama/llama-server, /usr/local/bin/dist/linux-amd64/lib/ollama/llama-server, /usr/local/bin/dist/linux_amd64/lib/ollama/llama-server, /workspaces/calma-ai/build/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux-amd64/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux_amd64/lib/ollama/llama-server). Run 'cmake -S llama/server --preset cpu && cmake --build --preset cpu' first \", 'type': 'api_error', 'param': None, 'code': None}}",
-    "Erro no kickoff: Error code: 500 - {'error': {'message': \"error starting llama-server: llama-server binary not found (checked: /usr/local/lib/ollama/llama-server, /usr/local/bin/build/lib/ollama/llama-server, /usr/local/bin/dist/linux-amd64/lib/ollama/llama-server, /usr/local/bin/dist/linux_amd64/lib/ollama/llama-server, /workspaces/calma-ai/build/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux-amd64/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux_amd64/lib/ollama/llama-server). Run 'cmake -S llama/server --preset cpu && cmake --build --preset cpu' first \", 'type': 'api_error', 'param': None, 'code': None}}",
-    "Erro no kickoff: Error code: 500 - {'error': {'message': \"error starting llama-server: llama-server binary not found (checked: /usr/local/lib/ollama/llama-server, /usr/local/bin/build/lib/ollama/llama-server, /usr/local/bin/dist/linux-amd64/lib/ollama/llama-server, /usr/local/bin/dist/linux_amd64/lib/ollama/llama-server, /workspaces/calma-ai/build/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux-amd64/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux_amd64/lib/ollama/llama-server). Run 'cmake -S llama/server --preset cpu && cmake --build --preset cpu' first \", 'type': 'api_error', 'param': None, 'code': None}}",
-    "Erro no kickoff: Error code: 500 - {'error': {'message': \"error starting llama-server: llama-server binary not found (checked: /usr/local/lib/ollama/llama-server, /usr/local/bin/build/lib/ollama/llama-server, /usr/local/bin/dist/linux-amd64/lib/ollama/llama-server, /usr/local/bin/dist/linux_amd64/lib/ollama/llama-server, /workspaces/calma-ai/build/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux-amd64/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux_amd64/lib/ollama/llama-server). Run 'cmake -S llama/server --preset cpu && cmake --build --preset cpu' first \", 'type': 'api_error', 'param': None, 'code': None}}",
-    "Erro no kickoff: Error code: 500 - {'error': {'message': \"error starting llama-server: llama-server binary not found (checked: /usr/local/lib/ollama/llama-server, /usr/local/bin/build/lib/ollama/llama-server, /usr/local/bin/dist/linux-amd64/lib/ollama/llama-server, /usr/local/bin/dist/linux_amd64/lib/ollama/llama-server, /workspaces/calma-ai/build/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux-amd64/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux_amd64/lib/ollama/llama-server). Run 'cmake -S llama/server --preset cpu && cmake --build --preset cpu' first \", 'type': 'api_error', 'param': None, 'code': None}}",
-    "Erro no kickoff: Error code: 500 - {'error': {'message': \"error starting llama-server: llama-server binary not found (checked: /usr/local/lib/ollama/llama-server, /usr/local/bin/build/lib/ollama/llama-server, /usr/local/bin/dist/linux-amd64/lib/ollama/llama-server, /usr/local/bin/dist/linux_amd64/lib/ollama/llama-server, /workspaces/calma-ai/build/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux-amd64/lib/ollama/llama-server, /workspaces/calma-ai/dist/linux_amd64/lib/ollama/llama-server). Run 'cmake -S llama/server --preset cpu && cmake --build --preset cpu' first \", 'type': 'api_error', 'param': None, 'code': None}}"
+    "Se o aumento corresponde a 20 % do valor original, que operação você faria com o número 110 para encontrar quanto isso representa em reais?",
+    "Para descobrir quanto você economiza, que operação você deve fazer usando a ideia de “x % de um valor” apresentada no contexto? Qual seria a conta específica para encontrar 15 % de R$ 2.400?",
+    "Para descobrir o novo salário, primeiro calcule quanto corresponde a 5 % de R$ 1.800. Qual é o valor desse aumento? (Lembre‑se de que “x % de um valor” se obtém multiplicando o valor por x e dividindo por 100.)",
+    "Se 2 kg de farinha dão 40 pães, quantos pães você obteria usando apenas 1 kg? Depois, como você pode usar essa relação para descobrir quantos pães são feitos com 5 kg?",
+    "Se a quantidade de pedreiros diminui, o tempo necessário aumenta na mesma proporção. Como você pode escrever a relação entre “pedreiros” e “dias” usando uma proporção inversa e, a partir dela, descobrir quantos dias 3 pedreiros levariam para concluir o mesmo muro?",
+    "Se 1 litro permite percorrer 12 km, como você escreveria a proporção que relaciona litros e quilômetros para descobrir quantos litros são necessários para percorrer 300 km? Qual seria a fração que representa “litros : quilômetros” e como completá‑la?",
+    "Se você quiser encontrar 1/4 do salário, qual operação você deve fazer primeiro com o valor de R$ 2.000: dividir por 4 ou multiplicar por 1? E, depois de fazer essa operação, qual será o resultado?",
+    "Quantos pedaços da pizza ainda estão inteiros depois que você comeu os 3 pedaços? E, usando esse número de pedaços restantes, como você pode escrever a fração que representa a parte da pizza que sobrou?",
+    "Qual é o menor número que pode ser usado como denominador comum para ambas as frações, de modo que tanto \\( \\frac{1}{2} \\) quanto \\( \\frac{1}{3} \\) possam ser reescritas com esse mesmo denominador?",
+    "Se o juros é simples, ele se calcula multiplicando o valor emprestado pela taxa mensal e pelo número de meses. Qual seria a conta que você faria usando \\(I = P \\times i \\times n\\) para encontrar o total de juros?",
+    "Para começar, quais são os três valores que você precisa identificar na fórmula Juros = capital × taxa × tempo? Depois de encontrá‑los, como você usaria essa quantidade de juros para obter o montante total que será pago?",
+    "Qual é a operação que usamos para encontrar a área de um retângulo, e que números você substituiria nessa operação para a sala de 4 m por 5 m?",
+    "Para encontrar a quantidade de cerca necessária, que cálculo você deve fazer usando as medidas dos lados do retângulo?",
+    "Quais partes do texto — como o título, as palavras que aparecem com frequência e a primeira frase de cada parágrafo — você pode analisar para descobrir qual é o assunto mais importante que o autor está desenvolvendo?",
+    "Que elementos do parágrafo chamam sua atenção primeiro – por exemplo, o título, as palavras que aparecem com frequência ou a primeira frase – e como eles podem indicar qual é o assunto central que o autor está desenvolvendo?",
+    "Se o aumento foi de 20 %, que operação você deve fazer com o preço original de R$ 110 para descobrir quanto corresponde a esses 20 %?",
+    "Se 10 % corresponde a 10 partes de cada 100, quantas partes você teria que considerar para representar 25 % de um total de 100? Como poderia escrever essa relação como fração ou número decimal?",
+    "Se 10 % equivale a 10⁄100, que fração representa 50 % quando a escrevemos como “50⁄100”? E, ao simplificar essa fração, que número obtém‑se? Como esse número se relaciona com a ideia de “metade” de um todo?",
+    "Para começar, se você tem dois pontos \\(A=(x_A , y_A)\\) e \\(B=(x_B , y_B)\\), quais valores você precisa encontrar primeiro a partir das coordenadas antes de aplicar qualquer raiz quadrada?",
+    "Pensando nas radiações que o texto menciona, quais são as sete categorias que aparecem listadas no esquema do espectro eletromagnético?",
+    "Pensando nas atividades que a aula propõe – classificar as radiações eletromagnéticas por frequência, fontes e aplicações e discutir seus usos tecnológicos, especialmente no diagnóstico médico e no tratamento do câncer de mama – que tipo de compreensão ou habilidade você acha que a aula pretende que os estudantes desenvolvam?",
+    "Quais termos do trecho “lixo, poluição, enchentes e falta de saneamento básico” você reconhece como desafios que afetam tanto a sociedade quanto o meio ambiente nas cidades?",
+    "Seja \\(a\\) o valor investido por Antonio e \\(b\\) o valor investido por Bruna. Que duas equações você pode escrever a partir das informações de que a soma dos investimentos é R\\$ 30.000 e que o investimento de Bruna é R\\$ 2.000 maior que o de Antonio? Como você poderia usar uma dessas equações para substituir na outra e encontrar os valores de \\(a\\) e \\(b\\)?",
+    "Se hoje é terça‑feira, qual será o dia da semana que corresponde ao 20º dia depois, considerando que a semana tem 7 dias? (Pense em dividir 20 por 7 e usar o resto para descobrir o dia.)",
+    "Pense nas fontes que aparecem nos esquemas onde há produção de calor, vapor de água e movimento. Qual delas envolve a queima de materiais ou a fissão de urânio, ao contrário das fontes como água, vento, ondas e sol?",
+    "Quais são, na sua opinião, as principais características de um texto que tem como objetivo levar descobertas e pesquisas acadêmicas a um público geral, considerando o tipo de linguagem que usa, o foco do conteúdo e os meios pelos quais costuma ser divulgado?",
+    "Quais são os valores máximo e mínimo que o gráfico atinge, e como você poderia usar esses dois valores para obter metade da diferença entre eles?",
+    "Como você poderia descrever, em suas próprias palavras, o que acontece com a luz em uma fonte primária comparado ao que acontece com a luz em uma fonte secundária?",
+    "Como você acha que a qualidade do solo, o acesso a saneamento básico e a saúde das pessoas se conectam entre si, de modo que a condição de um desses elementos influencia diretamente os outros?",
+    "Para entender a diferença, pense no que acontece com o capital ao longo do tempo: no cálculo do juro simples, sobre qual valor o juro é sempre calculado, e como isso muda (ou não) quando usamos juros compostos?"
   ],
   "contexts": [
     [
@@ -75,6 +115,100 @@
       "Aumento: valor novo = valor antigo + parte do aumento. Desconto: valor novo = valor antigo - parte do desconto.",
       "[FAQ cmsp-27-006 sim=0.48] O material apresenta R$ 60 de juros simples e R$ 62,43 de juros compostos, arredondados para centavos.",
       "[FAQ cmsp-27-007 sim=0.41] Nas condições didáticas informadas, a opção de juros simples é mais vantajosa. O cálculo resulta em R$ 150 de juros simples e R$ 152,25 de compostos, sem outros encargos previstos no enunciado."
+    ],
+    [
+      "Juros simples: o juro de cada mês é sempre calculado sobre o valor inicial (capital).",
+      "Juros = capital x taxa x tempo (com a taxa em forma decimal).",
+      "Montante = capital + juros.",
+      "[FAQ cmsp-27-006 sim=0.40] O material apresenta R$ 60 de juros simples e R$ 62,43 de juros compostos, arredondados para centavos.",
+      "[FAQ cmsp-27-007 sim=0.37] Nas condições didáticas informadas, a opção de juros simples é mais vantajosa. O cálculo resulta em R$ 150 de juros simples e R$ 152,25 de compostos, sem outros encargos previstos no enunciado."
+    ],
+    [
+      "Perímetro é a medida do contorno: soma de todos os lados.",
+      "Área é a medida da superfície; no retângulo, área = comprimento x largura.",
+      "Área usa unidade ao quadrado (m²); perímetro usa unidade linear (m)."
+    ],
+    [
+      "Perímetro é a medida do contorno: soma de todos os lados.",
+      "Área é a medida da superfície; no retângulo, área = comprimento x largura.",
+      "Área usa unidade ao quadrado (m²); perímetro usa unidade linear (m)."
+    ],
+    [
+      "A ideia principal resume o assunto mais importante do texto.",
+      "O título, as palavras que se repetem e o início de cada parágrafo ajudam a identificar o assunto.",
+      "Uma inferência é uma conclusão apoiada por pistas do texto, mesmo quando não está escrita diretamente."
+    ],
+    [
+      "A ideia principal resume o assunto mais importante do texto.",
+      "O título, as palavras que se repetem e o início de cada parágrafo ajudam a identificar o assunto.",
+      "Uma inferência é uma conclusão apoiada por pistas do texto, mesmo quando não está escrita diretamente."
+    ],
+    [
+      "Porcentagem é uma fração com denominador 100: 10% = 10/100 = 0,10.",
+      "Calcular x% de um valor é multiplicar o valor por x e dividir por 100.",
+      "Aumento: valor novo = valor antigo + parte do aumento. Desconto: valor novo = valor antigo - parte do desconto."
+    ],
+    [
+      "Porcentagem é uma fração com denominador 100: 10% = 10/100 = 0,10.",
+      "Calcular x% de um valor é multiplicar o valor por x e dividir por 100.",
+      "Aumento: valor novo = valor antigo + parte do aumento. Desconto: valor novo = valor antigo - parte do desconto."
+    ],
+    [
+      "Porcentagem é uma fração com denominador 100: 10% = 10/100 = 0,10.",
+      "Calcular x% de um valor é multiplicar o valor por x e dividir por 100.",
+      "Aumento: valor novo = valor antigo + parte do aumento. Desconto: valor novo = valor antigo - parte do desconto."
+    ],
+    [
+      "[FAQ cmsp-01-003 sim=0.62] Para A = (x_A, y_A) e B = (x_B, y_B), a fórmula mostrada é d_AB = √[(x_B - x_A)² + (y_B - y_A)²]. O desenho relaciona as diferenças de coordenadas à distância entre os pontos. Foi normalizada a notação de B, repetida incorretamente na legenda do slide, de acordo com a própria fórmula e o desenho.",
+      "[FAQ cmsp-01-001 sim=0.33] Os pontos são representados por pares ordenados (x, y). O material exemplifica A = (1, 2), a origem O = (0, 0), pontos (x, 0) sobre o eixo horizontal e pontos (0, y) sobre o eixo vertical."
+    ],
+    [
+      "[FAQ cmsp-03-002 sim=0.69] O esquema apresenta ondas de rádio, micro-ondas, infravermelho, luz visível, ultravioleta, raios X e raios gama, em uma sequência de frequências crescentes."
+    ],
+    [
+      "[FAQ cmsp-03-001 sim=0.63] A aula propõe classificar radiações eletromagnéticas por frequência, fontes e aplicações e discutir seus usos tecnológicos, com destaque para diagnóstico médico e tratamento do câncer de mama."
+    ],
+    [
+      "[FAQ cmsp-04-001 sim=0.73] O material destaca lixo, poluição, enchentes e falta de saneamento básico nas cidades brasileiras."
+    ],
+    [
+      "[FAQ cmsp-14-001 sim=0.56] Chamando os investimentos de a e b, o sistema é a + b = 30.000 e b = a + 2.000. Substituindo, 2a + 2.000 = 30.000, portanto a = 14.000 e b = 16.000. Antonio investiu R$ 14.000 e Bruna R$ 16.000."
+    ],
+    [
+      "[FAQ cmsp-06-002 sim=0.70] Na terça-feira. A resolução usa a repetição semanal e o resto da divisão por sete para localizar o vigésimo dia. Como o laboratório funciona de segunda a sexta-feira, ela pode retirar o exame no dia previsto."
+    ],
+    [
+      "[FAQ cmsp-08-004 sim=0.71] A aula cita combustão e fissão de material radioativo, como urânio. Em ambos os esquemas, aparece a produção de calor, vapor de água e movimento.",
+      "[FAQ cmsp-08-002 sim=0.37] Os slides mostram uma usina hidrelétrica, aerogeradores, um equipamento de aproveitamento das ondas do mar e painéis solares. As imagens servem de apoio à exposição oral.",
+      "[FAQ cmsp-08-003 sim=0.33] A síntese relaciona energia potencial gravitacional da água ao movimento e energia do vento ao movimento, no contexto da geração de eletricidade."
+    ],
+    [
+      "A ideia principal resume o assunto mais importante do texto.",
+      "O título, as palavras que se repetem e o início de cada parágrafo ajudam a identificar o assunto.",
+      "Uma inferência é uma conclusão apoiada por pistas do texto, mesmo quando não está escrita diretamente.",
+      "[FAQ cmsp-09-007 sim=0.49] A alternativa indicada no material é expor um conteúdo de natureza científica.",
+      "[FAQ cmsp-09-001 sim=0.47] É um texto voltado a divulgar pesquisas e investigações acadêmicas ao público em geral. A aula cita revistas, blogs e cadernos científicos de jornais como meios de circulação.",
+      "[FAQ cmsp-09-002 sim=0.35] O material destaca linguagem formal, emprego da norma-padrão e vocabulário específico da área de pesquisa."
+    ],
+    [
+      "[FAQ cmsp-10-003 sim=0.65] A amplitude corresponde à metade da diferença entre o valor máximo e o mínimo: A = (máximo - mínimo) / 2.",
+      "[FAQ cmsp-10-002 sim=0.37] Na representação da aula, é a distância horizontal entre dois picos sucessivos, correspondente ao intervalo de repetição do fenômeno."
+    ],
+    [
+      "[FAQ cmsp-18-002 sim=0.65] A fonte primária produz luz própria, como o Sol ou uma lâmpada acesa. A secundária reflete luz recebida de outra fonte, como a Lua ou uma parede iluminada."
+    ],
+    [
+      "[FAQ cmsp-16-002 sim=0.85] A aula propõe compreender a inter-relação entre qualidade do solo, saneamento básico e saúde.",
+      "[FAQ cmsp-16-001 sim=0.36] Taxa de mortalidade infantil, cobertura de saneamento básico e incidência de doenças de veiculação hídrica e atmosférica, além de resultados de políticas públicas de saúde.",
+      "[FAQ cmsp-16-003 sim=0.31] A síntese afirma que localização geográfica, tipo de solo e clima influenciam o desenvolvimento econômico local e, consequentemente, a qualidade de vida das pessoas."
+    ],
+    [
+      "Juros simples: o juro de cada mês é sempre calculado sobre o valor inicial (capital).",
+      "Juros = capital x taxa x tempo (com a taxa em forma decimal).",
+      "Montante = capital + juros.",
+      "[FAQ cmsp-27-005 sim=0.53] Nos simples, a taxa incide sobre o capital inicial e J = C × i × t. Nos compostos, considera-se o capital atualizado e J = C × [(1 + i)^t - 1]. A taxa i deve ser usada em forma decimal e compatível com a unidade de tempo de t.",
+      "[FAQ cmsp-27-006 sim=0.32] O material apresenta R$ 60 de juros simples e R$ 62,43 de juros compostos, arredondados para centavos.",
+      "[FAQ cmsp-27-007 sim=0.30] Nas condições didáticas informadas, a opção de juros simples é mais vantajosa. O cálculo resulta em R$ 150 de juros simples e R$ 152,25 de compostos, sem outros encargos previstos no enunciado."
     ]
   ],
   "ground_truth": [
@@ -87,6 +221,26 @@
     "Paga R$ 500,00 de aluguel (2.000 ÷ 4).",
     "Sobrou 5/8 da pizza (8/8 − 3/8).",
     "É preciso igualar os denominadores: 1/2 + 1/3 = 3/6 + 2/6 = 5/6.",
-    "Juros = 500 × 0,03 × 4 = R$ 60,00."
+    "Juros = 500 × 0,03 × 4 = R$ 60,00.",
+    "Total = 1.200 + (1.200 × 0,02 × 6) = R$ 1.344,00.",
+    "Precisa de 20 m² de piso (4 × 5).",
+    "Precisa de 70 m de cerca (2 × (10 + 25)).",
+    "A ideia principal resume o assunto mais importante do texto; ajuda olhar o título e o início de cada parágrafo.",
+    "Comece pelo título e pelo primeiro parágrafo; identifique sobre o que o texto fala antes dos detalhes.",
+    "O aumento foi de R$ 22,00 (110 × 20 / 100).",
+    "25% é 25 partes de 100, ou 1/4.",
+    "50% é 50/100, que simplificado é 1/2.",
+    "Para A = (x_A, y_A) e B = (x_B, y_B), d_AB = √[(x_B − x_A)² + (y_B − y_A)²].",
+    "Ondas de rádio, micro-ondas, infravermelho, luz visível, ultravioleta, raios X e raios gama, em frequências crescentes.",
+    "Classificar radiações eletromagnéticas por frequência, fontes e aplicações; discutir usos na saúde, com destaque para diagnóstico e tratamento do câncer de mama.",
+    "Lixo, poluição, enchentes e falta de saneamento básico nas cidades brasileiras.",
+    "Sistema a + b = 30.000 e b = a + 2.000. Substituindo, a = 14.000 e b = 16.000. Antonio investiu R$ 14.000 e Bruna R$ 16.000.",
+    "Na terça-feira, usando a repetição semanal e o resto da divisão de 20 por 7.",
+    "Combustão e fissão de material radioativo (como urânio).",
+    "É um texto voltado a divulgar pesquisas e investigações acadêmicas ao público em geral.",
+    "A = (máximo − mínimo) / 2.",
+    "A fonte primária produz luz própria (Sol, lâmpada acesa); a secundária reflete luz recebida (Lua, parede iluminada).",
+    "Compreender a inter-relação entre qualidade do solo, saneamento básico e saúde.",
+    "Simples: J = C × i × t, taxa incide só sobre o capital inicial. Compostos: J = C × [(1 + i)^t − 1], considera o capital atualizado."
   ]
 }
