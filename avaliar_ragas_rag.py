@@ -1,14 +1,14 @@
 """
-Avaliação do Calma AI com RAGAS usando APENAS Groq (LLM na nuvem).
-Não usa Ollama, não gasta disco e ignora métricas que exigem embeddings.
-
-Uso:
-  export GROQ_API_KEY="sua_chave"
-  uv run python avaliar_ragas_rag.py --max-perguntas 10
+Avaliação do Calma AI com RAGAS usando Google Gemini.
+Versão corrigida: lida com argumentos dinâmicos das métricas,
+limites de requisição da API (429) e diferentes versões do RAGAS.
 """
 
 import argparse
+import asyncio
+import inspect
 import json
+import math
 import os
 import sys
 import warnings
@@ -18,6 +18,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 SIMILARIDADE_MINIMA = 0.30
+# gemini-1.5-flash tem cota gratuita generosa (~1500 req/dia).
+# gemini-2.0-flash também é uma opção, mas pode ter limite diário menor.
+MODELO = "gemini-4-hydrogen"
 
 GABARITO = {
     "question": [
@@ -86,8 +89,10 @@ GABARITO = {
     ],
 }
 
+
 def _consultar_base(pergunta: str) -> dict:
     from calma_ai.tools.conteudo import ConsultarConteudoTool
+
     try:
         bruto = ConsultarConteudoTool()._run(pergunta)
         dados = json.loads(bruto)
@@ -95,110 +100,185 @@ def _consultar_base(pergunta: str) -> dict:
     except Exception:
         return {}
 
+
 def _extrair_contextos(pergunta: str) -> list[str]:
     dados = _consultar_base(pergunta)
     topico = dados.get("topico")
     contexts = []
-    
+
     if topico and topico != "outro":
         for c in dados.get("conceitos") or []:
             contexts.append(c.strip())
-            
+
     for ref in dados.get("referencias_faq") or []:
         sim = ref.get("similaridade") or 0.0
         if sim >= SIMILARIDADE_MINIMA:
-            contexts.append(f"[FAQ {ref.get('id','?')} sim={sim:.2f}] {ref.get('resposta','').strip()}")
-            
+            contexts.append(
+                f"[FAQ {ref.get('id', '?')} sim={sim:.2f}] {ref.get('resposta', '').strip()}"
+            )
+
     return contexts
 
+
+def _chamar_gemini_com_retry(client, prompt: str, max_tentativas: int = 4) -> str:
+    """Chama a API do Gemini com backoff exponencial para erros 429."""
+    for tentativa in range(max_tentativas):
+        try:
+            return client.models.generate_content(
+                model=MODELO,
+                contents=prompt,
+                config={"temperature": 0.0},
+            ).text.strip()
+        except Exception as e:
+            erro_str = str(e).lower()
+            if "429" in erro_str or "resource exhausted" in erro_str or "quota" in erro_str:
+                if tentativa < max_tentativas - 1:
+                    delay = 2 ** tentativa  # 1s, 2s, 4s...
+                    print(f"    [429] Limite atingido. Tentando novamente em {delay}s...")
+                    import time
+                    time.sleep(delay)
+                    continue
+            raise
+    raise RuntimeError("Máximo de tentativas atingido")
+
+
 def gerar_dataset_rag(max_perguntas=None):
-    from openai import OpenAI
-    
+    from google import genai
+
     questions = GABARITO["question"][:max_perguntas]
     truths = GABARITO["ground_truth"][:max_perguntas]
-    
-    client = OpenAI(
-        api_key=os.environ.get("GROQ_API_KEY"),
-        base_url="https://api.groq.com/openai/v1"
-    )
-    
+
+    client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
+
     dados = {"question": [], "answer": [], "contexts": [], "ground_truth": []}
     total = len(questions)
-    
-    print(f"[RAG] Gerando respostas via Groq para {total} pergunta(s)...\n")
-    
+
+    print(f"[RAG] Gerando respostas via Gemini ({MODELO}) para {total} pergunta(s)...\n")
+
     for i, pergunta in enumerate(questions, 1):
         contexts = _extrair_contextos(pergunta)
         ctx_texto = "\n".join(contexts)
-        
+
         prompt = f"""Você é um tutor socrático. Baseado APENAS no contexto abaixo, responda à pergunta do aluno sem entregar a resposta final, guiando-o com uma pergunta.
-        
+
 Contexto: {ctx_texto}
 Pergunta: {pergunta}
 Resposta:"""
-        
+
         try:
-            resposta = client.chat.completions.create(
-                model="openai/gpt-oss-120b", # Modelo atualizado
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.0
-            ).choices[0].message.content.strip()
+            resposta = _chamar_gemini_com_retry(client, prompt)
         except Exception as e:
-            resposta = f"Erro na API: {e}"
-            
+            resposta = f"Erro na API Gemini: {e}"
+
         dados["question"].append(pergunta)
         dados["answer"].append(resposta)
         dados["contexts"].append(contexts)
         dados["ground_truth"].append(truths[i - 1])
-        
+
         print(f"[{i}/{total}] {pergunta[:50]}")
         print(f"    → answer: {resposta[:100]}...\n")
 
-    with open("dataset_ragas_real.json", "w", encoding="utf-8") as f:
+    with open("dataset_ragas_gemini.json", "w", encoding="utf-8") as f:
         json.dump(dados, f, indent=2, ensure_ascii=False)
-    print("Dataset salvo em dataset_ragas_real.json\n")
+    print("Dataset salvo em dataset_ragas_gemini.json\n")
     return dados
+
 
 def avaliar_com_ragas():
     import pandas as pd
-    from datasets import Dataset
-    from ragas import evaluate
-    from ragas.metrics import faithfulness, context_precision, context_recall
+    from google import genai
     from ragas.llms import llm_factory
-    from openai import AsyncOpenAI
+    from ragas.metrics.collections import (
+        Faithfulness,
+        ContextPrecisionWithReference,
+        ContextRecall,
+    )
 
-    arquivo = Path("dataset_ragas_real.json")
+    arquivo = Path("dataset_ragas_gemini.json")
     if not arquivo.exists():
-        raise FileNotFoundError("Dataset não encontrado. Rode sem --so-avaliar primeiro.")
+        raise FileNotFoundError(
+            "Dataset não encontrado. Rode sem --so-avaliar primeiro."
+        )
 
     with open(arquivo, encoding="utf-8") as f:
         dados = json.load(f)
-    dataset_ragas = Dataset.from_dict(dados)
-    
-    print(f"[RAGAS] Avaliando {len(dataset_ragas)} pergunta(s) usando Groq como Juiz...\n")
 
-    # Juiz: Groq (openai/gpt-oss-120b)
-    groq_client = AsyncOpenAI(
-        api_key=os.environ.get("GROQ_API_KEY"),
-        base_url="https://api.groq.com/openai/v1"
-    )
-    juiz_llm = llm_factory("openai/gpt-oss-120b", provider="openai", client=groq_client) # Modelo atualizado
-
-    resultado = evaluate(
-        dataset=dataset_ragas,
-        metrics=[faithfulness, context_precision, context_recall],
-        llm=juiz_llm,
+    client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
+    juiz_llm = llm_factory(
+        MODELO,
+        provider="google",
+        client=client,
+        adapter="litellm",  # Força o uso do adaptador LiteLLM
     )
 
-    df_metricas = resultado.to_pandas().reset_index(drop=True)
-    df_dataset  = dataset_ragas.to_pandas().reset_index(drop=True)
-    df_final    = pd.concat([df_dataset, df_metricas], axis=1)
+    metrics = [
+        Faithfulness(llm=juiz_llm),
+        ContextPrecisionWithReference(llm=juiz_llm),
+        ContextRecall(llm=juiz_llm),
+    ]
+
+    print(
+        f"[RAGAS] Avaliando {len(dados['question'])} pergunta(s) usando Gemini como Juiz...\n"
+    )
+
+    # Mapeamento explícito: JSON original -> nomes esperados pelo RAGAS 0.4
+    MAPA_CAMPOS = {
+        "question": "user_input",
+        "answer": "response",
+        "contexts": "retrieved_contexts",
+        "ground_truth": "reference",
+    }
+
+    async def score_sample(sample_json, semaforo):
+        sample = {MAPA_CAMPOS.get(k, k): v for k, v in sample_json.items()}
+        row = {"question": sample_json["question"]}
+
+        for metric in metrics:
+            # Inspeciona a assinatura de ascore() para passar exatamente
+            # os argumentos que a métrica espera. Funciona para qualquer métrica.
+            parametros_esperados = inspect.signature(metric.ascore).parameters
+            kwargs = {
+                nome: sample[nome]
+                for nome in parametros_esperados
+                if nome in sample
+            }
+
+            async with semaforo:
+                try:
+                    result = await metric.ascore(**kwargs)
+                    row[metric.name] = result.value
+                except Exception as error:
+                    print(f"{metric.name} falhou em {sample_json['question']!r}: {error}")
+                    row[metric.name] = math.nan
+        return row
+
+    async def score_dataset(max_concurrency=2):
+        # Concorrência baixa para respeitar o limite de requisições por minuto
+        semaforo = asyncio.Semaphore(max_concurrency)
+        tarefas = [
+            score_sample(dict(zip(dados.keys(), valores)), semaforo)
+            for valores in zip(*dados.values())
+        ]
+        return await asyncio.gather(*tarefas)
+
+    resultados = asyncio.run(score_dataset())
+
+    df_metricas = pd.DataFrame(resultados)
+    df_dataset = pd.DataFrame(dados)
+    df_final = pd.concat([df_dataset, df_metricas], axis=1)
 
     print("\n--- RESULTADO FINAL ---")
-    print(resultado)
+    colunas_metricas = [
+        c for c in df_final.columns
+        if c not in {"question", "answer", "contexts", "ground_truth"}
+    ]
+    if colunas_metricas:
+        print(df_final[["question"] + colunas_metricas].describe())
+    else:
+        print("Nenhuma métrica foi calculada com sucesso.")
 
-    df_final.to_csv("resultados_ragas_real.csv", index=False)
-    print("\nSalvo em resultados_ragas_real.csv")
+    df_final.to_csv("resultados_ragas_gemini.csv", index=False)
+    print("\nSalvo em resultados_ragas_gemini.csv")
 
 
 def main():
@@ -207,14 +287,15 @@ def main():
     parser.add_argument("--max-perguntas", type=int, default=10)
     args = parser.parse_args()
 
-    if not os.environ.get("GROQ_API_KEY"):
-        print("ERRO: Configure a variável GROQ_API_KEY antes de rodar.")
+    if not os.environ.get("GOOGLE_API_KEY"):
+        print("ERRO: Configure a variável GOOGLE_API_KEY antes de rodar.")
         sys.exit(1)
 
     if not args.so_avaliar:
         gerar_dataset_rag(args.max_perguntas)
-    
+
     avaliar_com_ragas()
+
 
 if __name__ == "__main__":
     main()
