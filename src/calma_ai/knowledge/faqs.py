@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import re
+import socket
 import sys
 from dataclasses import dataclass
 from functools import lru_cache
@@ -11,12 +13,32 @@ from pathlib import Path
 from typing import Any, Sequence
 
 import numpy as np
+from dotenv import load_dotenv
+
+LOGGER = logging.getLogger(__name__)
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
+load_dotenv(dotenv_path=ROOT_DIR / ".env")
+
 DEFAULT_FAQ_PATH = ROOT_DIR / "data" / "faq" / "FAQ_CONSOLIDADO.md"
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-MIN_SIMILARITY = 0.625
+DEFAULT_QDRANT_COLLECTION = "eja_conhecimento"
+MIN_SIMILARITY = 0.50
 AMBIGUITY_MARGIN_RATIO = 0.0
+
+# evita timeouts
+def _force_ipv4() -> None:
+    
+    old_getaddrinfo = socket.getaddrinfo
+    if getattr(old_getaddrinfo, "_ipv4_forced", False):
+        return
+
+    def new_getaddrinfo(*args: Any, **kwargs: Any) -> list[Any]:
+        responses = old_getaddrinfo(*args, **kwargs)
+        return [r for r in responses if r[0] == socket.AF_INET]
+
+    new_getaddrinfo._ipv4_forced = True  # type: ignore[attr-defined]
+    socket.getaddrinfo = new_getaddrinfo
 
 
 @dataclass(frozen=True)
@@ -147,6 +169,20 @@ def _load_model(model_name: str) -> Any:
     return SentenceTransformer(model_name, cache_folder=cache_folder)
 
 
+@lru_cache(maxsize=2)
+def _get_qdrant_client(url: str, api_key: str) -> Any:
+    from qdrant_client import QdrantClient
+
+    _force_ipv4()
+    return QdrantClient(
+        url=url,
+        api_key=api_key,
+        port=443,
+        timeout=30,
+        prefer_grpc=False,
+    )
+
+
 def _faq_text(faq: FAQ) -> str:
     return (
         f"Pergunta: {faq.question}\n"
@@ -214,6 +250,74 @@ def _is_ambiguous(matches: Sequence[FAQMatch], margin_ratio: float) -> bool:
     )
 
 
+def _search_qdrant(
+    queries: Sequence[str],
+    *,
+    limit: int,
+    threshold: float,
+    margin_ratio: float,
+    materia: str | None = None,
+) -> tuple[FAQSearch, ...] | None:
+    # consulta o cluster, retona None se credenciais estiverem ausentes ou falhar
+    qdrant_url = os.getenv("QDRANT_URL", "").strip()
+    qdrant_key = os.getenv("QDRANT_API_KEY", "").strip()
+    if not qdrant_url or not qdrant_key:
+        return None
+
+    collection = os.getenv("QDRANT_COLLECTION", DEFAULT_QDRANT_COLLECTION).strip()
+    try:
+        from qdrant_client.models import FieldCondition, Filter, MatchValue
+
+        client = _get_qdrant_client(qdrant_url, qdrant_key)
+        model = _load_model(_model_name())
+
+        nonempty_indices = [i for i, q in enumerate(queries) if q.strip()]
+        query_embeddings = _encode(model, [queries[i] for i in nonempty_indices])
+
+        query_filter = None
+        if materia:
+            query_filter = Filter(
+                must=[FieldCondition(key="materia", match=MatchValue(value=materia))]
+            )
+
+        results = [FAQSearch(matches=(), ambiguous=False) for _ in queries]
+        for row, query_index in enumerate(nonempty_indices):
+            hits = client.query_points(
+                collection_name=collection,
+                query=query_embeddings[row].tolist(),
+                query_filter=query_filter,
+                limit=limit,
+                score_threshold=threshold if threshold > 0 else None,
+                with_payload=True,
+            ).points
+
+            matches: list[FAQMatch] = []
+            for hit in hits:
+                p = hit.payload or {}
+                faq_obj = FAQ(
+                    id=str(p.get("id_faq", hit.id)),
+                    question=str(p.get("pergunta", "")),
+                    answer=str(p.get("resposta", "")),
+                    topic=str(p.get("tema", "")),
+                    source=str(p.get("fonte", "")),
+                    pdf=str(p.get("pdf", "")),
+                    pages=str(p.get("paginas", "")),
+                    origin=str(p.get("origem", "")),
+                    document=str(p.get("tema", "")),
+                )
+                matches.append(FAQMatch(faq=faq_obj, score=float(hit.score)))
+
+            matches_tuple = tuple(matches)
+            results[query_index] = FAQSearch(
+                matches=matches_tuple,
+                ambiguous=_is_ambiguous(matches_tuple, margin_ratio),
+            )
+        return tuple(results)
+    except Exception as erro:
+        LOGGER.warning("Falha ao consultar Qdrant Cloud, usando fallback local: %s", erro)
+        return None
+
+
 def search_many_faqs(
     queries: Sequence[str],
     *,
@@ -221,8 +325,9 @@ def search_many_faqs(
     path: Path | None = None,
     min_similarity: float | None = None,
     ambiguity_margin_ratio: float | None = None,
+    materia: str | None = None,
 ) -> tuple[FAQSearch, ...]:
-    """Busca várias consultas em lote para avaliação, com o mesmo índice neural."""
+    """Busca várias consultas em lote via Qdrant Cloud (com fallback para índice local)."""
     if limit < 1:
         raise ValueError("O limite de resultados precisa ser positivo.")
     if not queries:
@@ -254,6 +359,19 @@ def search_many_faqs(
     if all(not query.strip() for query in queries):
         return tuple(FAQSearch(matches=(), ambiguous=False) for _ in queries)
 
+    # prioriza qdrant quando nenhum arquivo local especifico (ex: testes) for forçado
+    if path is None and os.getenv("CALMA_FAQ_PATH") is None:
+        qdrant_results = _search_qdrant(
+            queries,
+            limit=limit,
+            threshold=threshold,
+            margin_ratio=margin_ratio,
+            materia=materia,
+        )
+        if qdrant_results is not None:
+            return qdrant_results
+
+    # fallback local em memoria
     corpus_path = (path or faq_path()).resolve()
     stat = corpus_path.stat()
     model_name = _model_name()
@@ -290,12 +408,14 @@ def search_faqs(
     path: Path | None = None,
     min_similarity: float | None = None,
     ambiguity_margin_ratio: float | None = None,
+    materia: str | None = None,
 ) -> FAQSearch:
-    """Ranqueia FAQs por similaridade de cosseno entre embeddings normalizados."""
+    """Ranqueia FAQs por similaridade de cosseno (via Qdrant Cloud ou índice local)."""
     return search_many_faqs(
         [query],
         limit=limit,
         path=path,
         min_similarity=min_similarity,
         ambiguity_margin_ratio=ambiguity_margin_ratio,
+        materia=materia,
     )[0]

@@ -3,3 +3,5 @@ dotenv
 pandas
 pymongo
 qdrant_client
+crewai
+pytest
