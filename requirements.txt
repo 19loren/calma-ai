@@ -1,0 +1,5 @@
+sentence_transformers
+dotenv
+pandas
+pymongo
+qdrant_client
