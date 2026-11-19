@@ -1,6 +1,6 @@
 {
   "seed": 2026,
-  "max_examples": 10,
+  "max_examples": 20,
   "review_sample_size": 100,
   "llm_mode": "REAL",
   "llm_model": "qwen/qwen3.8-27b",

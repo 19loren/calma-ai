@@ -12,8 +12,11 @@ Abra os notebooks em Jupyter/VS Code e execute todas as células, em ordem:
 1. `01_carregar_e_extrair_gsm8k.ipynb` baixa `openai/gsm8k` (`main`) e grava os
    problemas, as etapas, as contas `<<expressao=resultado>>` e as respostas
    `####` em `data/raw/gsm8k_extraido.jsonl`.
-2. `02_localizar_problemas_eja.ipynb` adapta uma amostra para situações
-   brasileiras e verifica as contas; grava `data/interim/problemas_localizados.jsonl`.
+2. `02_localizar_problemas_eja.ipynb` reescreve uma amostra em português
+   brasileiro, com situações adequadas à EJA, e grava
+   `data/interim/problemas_localizados.jsonl`. A validação exige os mesmos
+   valores numéricos, troca dólares por `R$`, rejeita unidades estrangeiras e
+   descarta adaptações que o modelo sinalize como inadequadas.
 3. `03_injetar_erros_e_validar.ipynb` constrói tentativas corretas e incorretas
    controladas e grava `data/interim/erros_validados.jsonl`.
 4. `04_gerar_diagnosticos_e_dpo.ipynb` cria diagnósticos tipados, rubricas e
@@ -54,8 +57,14 @@ piloto; troque-o se sua conta expuser outros modelos adequados. A chamada usa o 
 isolada em `chamar_llm()`, no notebook 02. A chave nunca deve ser gravada no
 notebook nem exibida. Consulte a [compatibilidade OpenAI da Groq](https://console.groq.com/docs/openai)
 e a [lista de modelos disponíveis](https://console.groq.com/docs/models).
-O modo REAL não calcula: o LLM deve preservar os números; mudanças numéricas
-fazem o exemplo ser descartado, e a resposta de referência é validada localmente.
+O modo REAL não calcula. O LLM deve preservar todos os valores numéricos, mas
+pode recontextualizá-los com moeda/unidade local como dados fictícios de um
+novo exercício; isso não é conversão cambial nem equivalência física. Valores
+alterados, moeda/unidade estrangeira restante ou adaptação sinalizada como
+inadequada fazem o exemplo ser descartado. A resposta de referência é
+preservada e conferida localmente. A política é versionada: se o notebook
+encontrar um JSONL de outra versão ou modo, ele o move para um backup datado
+sem sobrescrevê-lo e inicia uma nova geração.
 
 ## Formato e exemplos ilustrativos
 
