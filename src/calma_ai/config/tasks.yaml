@@ -8,6 +8,12 @@ diagnosticar:
     Pré-análise do agente reflexivo (regra aplicada, sinais percebidos, ação reflexa,
     pergunta orientadora e contexto informado): {reflex_analysis}
 
+    Exemplos pedagógicos sintéticos recuperados do split train do GSM8K:
+    {eja_fewshot_examples}
+    Use-os somente como referência de estilo. Não reutilize seus números, fatos ou
+    cenários; faça o diagnóstico da tentativa atual independentemente e confira as
+    contas com a calculadora.
+
     Considere a pré-análise e o contexto do estudante, mas faça seu próprio diagnóstico
     pedagógico. A ação reflexa indica como encaminhar o turno; `proxima_acao` é a
     decisão pedagógica deste diagnóstico.
@@ -63,6 +69,10 @@ orientar:
     com os dados e o contexto de {everyday_context}; reconheça tentativas específicas,
     inclusive quando estiverem incompletas ou erradas. Se houver uma mensagem reflexa,
     incorpore seu acolhimento ou limite em uma única resposta, sem repetir a frase pronta.
+    Preserve exatamente as relações descritas no enunciado e no diagnóstico. Não diga
+    que duas quantidades são iguais quando o problema informa que uma é metade, dobro
+    ou outra proporção da outra. Antes de enviar, confira que cada afirmação matemática
+    corresponde aos dados do problema; se houver dúvida, pergunte em vez de afirmar.
     Responda em português brasileiro. Nunca entregue a resposta final nem resolva o
     exercício original por completo. Você pode usar uma representação, uma etapa parcial
     ou um exemplo análogo para ensinar; encerre com uma pergunta que convide o estudante
@@ -81,6 +91,8 @@ revisar:
     1. Não revela o resultado final nem apresenta uma conta já resolvida do exercício.
     2. É respeitosa, sem infantilizar, e não critica gramática ou gírias.
     3. É curta e termina com uma pergunta.
+    4. Mantém as relações e os fatos do enunciado e do diagnóstico, sem contradizê-los
+       nem inventar informações.
     Se algum critério falhar, reescreva a mensagem corrigindo o problema. Se
     estiver tudo certo, mantenha a mensagem como está.
   expected_output: >

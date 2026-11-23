@@ -1,8 +1,10 @@
 from types import SimpleNamespace
 from unittest.mock import Mock
 
+import pytest
+
 import calma_ai.main as main
-from calma_ai.crew import CalmaAI
+from calma_ai.crew import CalmaAI, criar_llm_groq
 from calma_ai.models import Diagnostico, ProximaAcao, RespostaRevisada
 
 
@@ -30,15 +32,25 @@ def _resultado(mensagem):
     )
 
 
-def test_equipe_usa_llama_local_via_ollama(monkeypatch):
-    monkeypatch.delenv("OLLAMA_HOST", raising=False)
+def test_equipe_usa_groq_com_modelo_configurado(monkeypatch):
+    monkeypatch.setenv("GROQ_API_KEY", "test-groq-key")
+    monkeypatch.setenv("CALMA_GROQ_MODEL", "qwen/qwen3.8-27b")
 
     agentes = CalmaAI().crew().agents
 
     assert len(agentes) == 3
     for agente in agentes:
-        assert agente.llm.model == "llama3.2"
-        assert agente.llm.base_url == "http://localhost:11434/v1"
+        assert agente.llm.model == "qwen/qwen3.8-27b"
+        assert agente.llm.base_url == "https://api.groq.com/openai/v1"
+        assert agente.llm.api_key == "test-groq-key"
+
+
+def test_criar_llm_groq_exige_chave(monkeypatch):
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    monkeypatch.setattr("calma_ai.crew.load_dotenv", lambda **_kwargs: None)
+
+    with pytest.raises(RuntimeError, match="GROQ_API_KEY"):
+        criar_llm_groq()
 
 
 def test_executar_equipe_encaminha_contexto_para_crew(monkeypatch):
@@ -144,6 +156,32 @@ def test_processar_turno_oculta_diagnostico_no_modo_normal(monkeypatch, capsys, 
     assert "Tutor:\nO que você já percebeu?" in texto
 
 
+def test_processar_turno_envia_exemplos_gsm8k_ao_diagnosticador(
+    monkeypatch, tmp_path
+):
+    executar_equipe = Mock(
+        return_value=_resultado("Como você pode conferir essa conta?")
+    )
+    monkeypatch.setattr(main, "executar_equipe", executar_equipe)
+    monkeypatch.setenv("CALMA_DATA_DIR", str(tmp_path))
+    inputs = {
+        "student_id": "teste-01",
+        "student_question": (
+            "Natalia vendeu grampos em abril e maio. "
+            "Minha conta de porcentagem ficou diferente."
+        ),
+        "subject": "matemática",
+        "everyday_context": "compras",
+    }
+
+    main.processar_turno(inputs)
+
+    exemplos = executar_equipe.call_args.args[0]["eja_fewshot_examples"]
+    assert "Exemplo sintético" in exemplos
+    assert "Orientação preferida" in exemplos
+    assert "rejected" not in exemplos
+
+
 def test_processar_turno_nao_exibe_resposta_bruta_sem_validacao(monkeypatch, capsys, tmp_path):
     resultado = SimpleNamespace(
         tasks_output=[SimpleNamespace(pydantic=_diagnostico()), SimpleNamespace(pydantic=None)],
@@ -191,7 +229,7 @@ def test_processar_turno_bloqueia_vazamento_da_resposta_esperada(
 def test_processar_turno_registra_falha_da_equipe_e_responde_com_seguranca(
     monkeypatch, capsys, caplog
 ):
-    executar_equipe = Mock(side_effect=RuntimeError("Ollama indisponível"))
+    executar_equipe = Mock(side_effect=RuntimeError("Falha na API Groq"))
     monkeypatch.setattr(main, "executar_equipe", executar_equipe)
 
     with caplog.at_level("ERROR"):
@@ -205,5 +243,5 @@ def test_processar_turno_registra_falha_da_equipe_e_responde_com_seguranca(
         )
 
     assert "Falha ao executar a equipe" in caplog.text
-    assert "Ollama indisponível" in caplog.text
+    assert "Falha na API Groq" in caplog.text
     assert main.RESPOSTA_SEGURA_FALHA in capsys.readouterr().out
