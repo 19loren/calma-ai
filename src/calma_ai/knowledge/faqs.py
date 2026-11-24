@@ -23,12 +23,11 @@ load_dotenv(dotenv_path=ROOT_DIR / ".env")
 DEFAULT_FAQ_PATH = ROOT_DIR / "data" / "faq" / "FAQ_CONSOLIDADO.md"
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 DEFAULT_QDRANT_COLLECTION = "eja_conhecimento"
-MIN_SIMILARITY = 0.50
+MIN_SIMILARITY = 0.42
 AMBIGUITY_MARGIN_RATIO = 0.0
 
-# evita timeouts
+
 def _force_ipv4() -> None:
-    
     old_getaddrinfo = socket.getaddrinfo
     if getattr(old_getaddrinfo, "_ipv4_forced", False):
         return
@@ -52,6 +51,10 @@ class FAQ:
     pages: str
     origin: str
     document: str
+    materia: str = ""
+    modulo: str = ""
+    aula: str = ""
+    aula_id: str = ""
 
 
 @dataclass(frozen=True)
@@ -72,12 +75,10 @@ _METADATA_LINE = re.compile(r"^\*\*(.+?):\*\*\s*(.*)$")
 
 
 def faq_path() -> Path:
-    """Resolve o arquivo local, permitindo apontar para outra base por ambiente."""
     return Path(os.getenv("CALMA_FAQ_PATH", str(DEFAULT_FAQ_PATH))).expanduser()
 
 
 def parse_faqs(markdown: str) -> tuple[FAQ, ...]:
-    """Lê cada seção pergunta–resposta como um registro indivisível."""
     lines = markdown.splitlines()
     documents: list[FAQ] = []
     document_title = ""
@@ -144,6 +145,10 @@ def parse_faqs(markdown: str) -> tuple[FAQ, ...]:
                 pages=metadata["Páginas do PDF / slides"],
                 origin=origin,
                 document=document_title,
+                materia=metadata.get("Materia", ""),
+                modulo=metadata.get("Modulo", ""),
+                aula=metadata.get("Aula", ""),
+                aula_id=metadata.get("Aula ID", ""),
             )
         )
 
@@ -174,13 +179,7 @@ def _get_qdrant_client(url: str, api_key: str) -> Any:
     from qdrant_client import QdrantClient
 
     _force_ipv4()
-    return QdrantClient(
-        url=url,
-        api_key=api_key,
-        port=443,
-        timeout=30,
-        prefer_grpc=False,
-    )
+    return QdrantClient(url=url, api_key=api_key, port=443, timeout=30, prefer_grpc=False)
 
 
 def _faq_text(faq: FAQ) -> str:
@@ -226,12 +225,7 @@ def _float_setting(name: str, default: float, *, minimum: float, maximum: float)
 
 
 @lru_cache(maxsize=4)
-def _load_index(
-    path: Path,
-    modified_ns: int,
-    size: int,
-    model_name: str,
-) -> tuple[tuple[FAQ, ...], np.ndarray]:
+def _load_index(path: Path, modified_ns: int, size: int, model_name: str) -> tuple[tuple[FAQ, ...], np.ndarray]:
     del modified_ns, size
     faqs = parse_faqs(path.read_text(encoding="utf-8"))
     embeddings = _encode(_load_model(model_name), [_faq_text(faq) for faq in faqs])
@@ -243,11 +237,7 @@ def _model_name() -> str:
 
 
 def _is_ambiguous(matches: Sequence[FAQMatch], margin_ratio: float) -> bool:
-    return (
-        len(matches) > 1
-        and matches[0].score - matches[1].score
-        <= matches[0].score * margin_ratio
-    )
+    return len(matches) > 1 and matches[0].score - matches[1].score <= matches[0].score * margin_ratio
 
 
 def _search_qdrant(
@@ -257,8 +247,8 @@ def _search_qdrant(
     threshold: float,
     margin_ratio: float,
     materia: str | None = None,
+    aula_id: str | None = None,
 ) -> tuple[FAQSearch, ...] | None:
-    # consulta o cluster, retona None se credenciais estiverem ausentes ou falhar
     qdrant_url = os.getenv("QDRANT_URL", "").strip()
     qdrant_key = os.getenv("QDRANT_API_KEY", "").strip()
     if not qdrant_url or not qdrant_key:
@@ -274,11 +264,12 @@ def _search_qdrant(
         nonempty_indices = [i for i, q in enumerate(queries) if q.strip()]
         query_embeddings = _encode(model, [queries[i] for i in nonempty_indices])
 
-        query_filter = None
+        conditions = []
         if materia:
-            query_filter = Filter(
-                must=[FieldCondition(key="materia", match=MatchValue(value=materia))]
-            )
+            conditions.append(FieldCondition(key="materia", match=MatchValue(value=materia)))
+        if aula_id:
+            conditions.append(FieldCondition(key="aula_id", match=MatchValue(value=aula_id)))
+        query_filter = Filter(must=conditions) if conditions else None
 
         results = [FAQSearch(matches=(), ambiguous=False) for _ in queries]
         for row, query_index in enumerate(nonempty_indices):
@@ -303,7 +294,11 @@ def _search_qdrant(
                     pdf=str(p.get("pdf", "")),
                     pages=str(p.get("paginas", "")),
                     origin=str(p.get("origem", "")),
-                    document=str(p.get("tema", "")),
+                    document=str(p.get("documento", p.get("tema", ""))),
+                    materia=str(p.get("materia", "")),
+                    modulo=str(p.get("modulo", "")),
+                    aula=str(p.get("aula", "")),
+                    aula_id=str(p.get("aula_id", "")),
                 )
                 matches.append(FAQMatch(faq=faq_obj, score=float(hit.score)))
 
@@ -326,8 +321,8 @@ def search_many_faqs(
     min_similarity: float | None = None,
     ambiguity_margin_ratio: float | None = None,
     materia: str | None = None,
+    aula_id: str | None = None,
 ) -> tuple[FAQSearch, ...]:
-    """Busca várias consultas em lote via Qdrant Cloud (com fallback para índice local)."""
     if limit < 1:
         raise ValueError("O limite de resultados precisa ser positivo.")
     if not queries:
@@ -338,19 +333,12 @@ def search_many_faqs(
     threshold = (
         min_similarity
         if min_similarity is not None
-        else _float_setting(
-            "CALMA_FAQ_MIN_SIMILARITY", MIN_SIMILARITY, minimum=0.0, maximum=1.0
-        )
+        else _float_setting("CALMA_FAQ_MIN_SIMILARITY", MIN_SIMILARITY, minimum=0.0, maximum=1.0)
     )
     margin_ratio = (
         ambiguity_margin_ratio
         if ambiguity_margin_ratio is not None
-        else _float_setting(
-            "CALMA_FAQ_AMBIGUITY_MARGIN_RATIO",
-            AMBIGUITY_MARGIN_RATIO,
-            minimum=0.0,
-            maximum=1.0,
-        )
+        else _float_setting("CALMA_FAQ_AMBIGUITY_MARGIN_RATIO", AMBIGUITY_MARGIN_RATIO, minimum=0.0, maximum=1.0)
     )
     if not 0.0 <= threshold <= 1.0:
         raise ValueError("O limiar de similaridade precisa estar entre 0 e 1.")
@@ -359,7 +347,6 @@ def search_many_faqs(
     if all(not query.strip() for query in queries):
         return tuple(FAQSearch(matches=(), ambiguous=False) for _ in queries)
 
-    # prioriza qdrant quando nenhum arquivo local especifico (ex: testes) for forçado
     if path is None and os.getenv("CALMA_FAQ_PATH") is None:
         qdrant_results = _search_qdrant(
             queries,
@@ -367,37 +354,38 @@ def search_many_faqs(
             threshold=threshold,
             margin_ratio=margin_ratio,
             materia=materia,
+            aula_id=aula_id,
         )
         if qdrant_results is not None:
             return qdrant_results
 
-    # fallback local em memoria
     corpus_path = (path or faq_path()).resolve()
     stat = corpus_path.stat()
     model_name = _model_name()
-    faqs, faq_embeddings = _load_index(
-        corpus_path, stat.st_mtime_ns, stat.st_size, model_name
-    )
+    faqs, faq_embeddings = _load_index(corpus_path, stat.st_mtime_ns, stat.st_size, model_name)
     nonempty_indices = [index for index, query in enumerate(queries) if query.strip()]
-    query_embeddings = _encode(
-        _load_model(model_name), [queries[index] for index in nonempty_indices]
-    )
+    query_embeddings = _encode(_load_model(model_name), [queries[index] for index in nonempty_indices])
     if query_embeddings.shape[1] != faq_embeddings.shape[1]:
         raise ValueError("As dimensões dos embeddings de consulta e FAQ não coincidem.")
 
     scores = query_embeddings @ faq_embeddings.T
     results = [FAQSearch(matches=(), ambiguous=False) for _ in queries]
     for row, query_index in enumerate(nonempty_indices):
-        ranked_indices = np.argsort(scores[row])[::-1][:limit]
-        matches = tuple(
-            FAQMatch(faq=faqs[index], score=float(scores[row, index]))
-            for index in ranked_indices
-            if scores[row, index] > 0 and scores[row, index] >= threshold
-        )
-        results[query_index] = FAQSearch(
-            matches=matches,
-            ambiguous=_is_ambiguous(matches, margin_ratio),
-        )
+        ranked_indices = np.argsort(scores[row])[::-1]
+        matches_list: list[FAQMatch] = []
+        for index in ranked_indices:
+            if scores[row, index] <= 0 or scores[row, index] < threshold:
+                break
+            faq_item = faqs[index]
+            if materia and faq_item.materia and faq_item.materia != materia:
+                continue
+            if aula_id and faq_item.aula_id and faq_item.aula_id != aula_id:
+                continue
+            matches_list.append(FAQMatch(faq=faq_item, score=float(scores[row, index])))
+            if len(matches_list) >= limit:
+                break
+        matches = tuple(matches_list)
+        results[query_index] = FAQSearch(matches=matches, ambiguous=_is_ambiguous(matches, margin_ratio))
     return tuple(results)
 
 
@@ -409,8 +397,8 @@ def search_faqs(
     min_similarity: float | None = None,
     ambiguity_margin_ratio: float | None = None,
     materia: str | None = None,
+    aula_id: str | None = None,
 ) -> FAQSearch:
-    """Ranqueia FAQs por similaridade de cosseno (via Qdrant Cloud ou índice local)."""
     return search_many_faqs(
         [query],
         limit=limit,
@@ -418,4 +406,5 @@ def search_faqs(
         min_similarity=min_similarity,
         ambiguity_margin_ratio=ambiguity_margin_ratio,
         materia=materia,
+        aula_id=aula_id,
     )[0]
