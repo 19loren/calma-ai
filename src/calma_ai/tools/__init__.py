@@ -3,3 +3,6 @@ from calma_ai.tools.conteudo import ConsultarConteudoTool
 from calma_ai.tools.progresso import PerfilEstudanteTool
 
 __all__ = ["CalculadoraTool", "ConsultarConteudoTool", "PerfilEstudanteTool"]
+
+from calma_ai.tools.emoção import DetectEmocaoTool
+__all__ = ["CalculadoraTool", "ConsultarConteudoTool", "PerfilEstudanteTool", "DetectEmocaoTool"]
