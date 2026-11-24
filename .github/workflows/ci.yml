@@ -14,5 +14,5 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -e ".[dev]" pytest
-      - run: pytest
+      - run: python -m pytest
       - run: python scripts/sincronizar_conteudo.py --dry-run
