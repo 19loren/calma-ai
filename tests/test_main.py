@@ -39,6 +39,7 @@ def test_equipe_usa_groq_com_modelo_configurado(monkeypatch):
     agentes = CalmaAI().crew().agents
 
     assert len(agentes) == 3
+    assert "detectar_emocao" in [tool.name for tool in agentes[0].tools]
     for agente in agentes:
         assert agente.llm.model == "qwen/qwen3.8-27b"
         assert agente.llm.base_url == "https://api.groq.com/openai/v1"
