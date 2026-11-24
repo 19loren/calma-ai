@@ -1,16 +1,22 @@
+import os
 import re
 import unicodedata
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
 from typing import Any
 
-from crewai import Agent, Crew, Process, Task
+from crewai import Agent, Crew, LLM, Process, Task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
 from crewai.tasks.task_output import TaskOutput
+from dotenv import load_dotenv
 
 from calma_ai.models import Diagnostico, RespostaRevisada
 from calma_ai.tools import CalculadoraTool, ConsultarConteudoTool, PerfilEstudanteTool
 
+ROOT_DIR = Path(__file__).resolve().parents[2]
+GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b"
 LIMITE_CARACTERES = 1000
 PADRAO_CONTA_RESOLVIDA = re.compile(
     r"\b\d+(?:[.,]\d+)?\s*[x×*/÷+]\s*\d+(?:[.,]\d+)?"
@@ -26,6 +32,28 @@ PALAVRAS_VAZIAS_RESPOSTA = frozenset(
         "pelo", "por", "que", "um", "uma", "uns", "umas",
     }
 )
+
+
+def criar_llm_groq() -> LLM:
+    """Cria o cliente Groq sem armazenar a chave no código ou na configuração YAML."""
+    load_dotenv(dotenv_path=ROOT_DIR / ".env")
+    api_key = os.getenv("GROQ_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError(
+            "GROQ_API_KEY não encontrada. Configure-a no .env da raiz do projeto."
+        )
+
+    model = os.getenv("CALMA_GROQ_MODEL", DEFAULT_GROQ_MODEL).strip()
+    if not model:
+        raise ValueError("CALMA_GROQ_MODEL não pode ficar vazio.")
+
+    return LLM(
+        model=model,
+        provider="openai",
+        base_url=GROQ_BASE_URL,
+        api_key=api_key,
+        temperature=0.2,
+    )
 
 
 def _normalizar_texto(texto: str) -> str:
@@ -126,6 +154,7 @@ class CalmaAI:
     def diagnosticador(self) -> Agent:
         return Agent(
             config=self.agents_config["diagnosticador"],  # type: ignore[index]
+            llm=criar_llm_groq(),
             tools=[PerfilEstudanteTool(), ConsultarConteudoTool(), CalculadoraTool()],
         )
 
@@ -133,12 +162,16 @@ class CalmaAI:
     def tutor(self) -> Agent:
         return Agent(
             config=self.agents_config["tutor"],  # type: ignore[index]
+            llm=criar_llm_groq(),
             tools=[ConsultarConteudoTool()],
         )
 
     @agent
     def revisor(self) -> Agent:
-        return Agent(config=self.agents_config["revisor"])  # type: ignore[index]
+        return Agent(
+            config=self.agents_config["revisor"],  # type: ignore[index]
+            llm=criar_llm_groq(),
+        )
 
     @task
     def diagnosticar(self) -> Task:

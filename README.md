@@ -18,7 +18,7 @@ Agente reflexivo (regras if/else + regex, sem chamada ao LLM) src/calma_ai/refle
    │  R6 dúvida de conteúdo (pergunta, número ou tentativa) → encaminha
    │  R7 nenhuma dúvida identificada (ex.: só um nome) → pede a dúvida (para aqui)
    ▼
-Equipe CrewAI (Llama 3.2 via Ollama local)                  src/calma_ai/crew.py
+Equipe CrewAI (Groq API)                                    src/calma_ai/crew.py
    1. Diagnosticador: consulta histórico, base de conteúdo e calculadora;
       decide a próxima ação (fazer_pergunta, dar_dica, validar_e_avancar,
       propor_exercicio) e devolve um diagnóstico estruturado.
@@ -68,6 +68,14 @@ Progresso do estudante salvo em data/estudantes/<id>.json
   `test` de conversas com respostas apoiadas ou não pelas FAQs. O README dessa pasta
   explica o formato, os rótulos e as divisões. Nenhum pipeline atual do repositório
   carrega esses arquivos para treinar ou avaliar um modelo.
+- **Exemplos do Diagnosticador EJA:** o fluxo usa somente `train.jsonl` de
+  `notebooks/eja_diagnosticador_dataset/data/final/` para recuperar até dois
+  exemplos `chosen` lexicalmente semelhantes e incluí-los como referência de estilo
+  no diagnóstico. Isso não treina nem altera os pesos do LLM; `val.jsonl` e
+  `test.jsonl` não são enviados ao modelo.
+- **Classificador de emoções:** `src/rede_neural_tfidf.ipynb` continua sendo um
+  experimento separado e não faz parte do fluxo do tutor. Os CSVs de emoções e os
+  pesos/preprocessadores treinados precisam ser disponibilizados antes de integrá-lo.
 - **Exemplos para testar o tutor:** [`docs/exemplos_perguntas.md`](docs/exemplos_perguntas.md).
 
 As bases em `data/faq/` e `data/datasets/` são versionadas. Já `data/raw/`,
@@ -86,8 +94,8 @@ adaptá-las à dúvida, à tentativa e ao contexto reais do estudante.
 
 ## Setup
 
-Requer Python 3.10 ou 3.11 e [uv](https://docs.astral.sh/uv/). O fluxo completo também requer
-o [Ollama](https://ollama.com/) instalado e em execução localmente.
+Requer Python 3.10 ou 3.11, [uv](https://docs.astral.sh/uv/) e uma chave da API Groq.
+Configure a chave no `.env` da raiz do projeto:
 
 ```powershell
 python -m venv .venv
@@ -96,17 +104,16 @@ pip install uv
 uv sync
 ```
 
-Baixe o modelo local usado pelos agentes:
-
-```powershell
-ollama pull llama3.2
+```dotenv
+GROQ_API_KEY=sua_chave
+CALMA_GROQ_MODEL=qwen/qwen3.8-27b
 ```
 
-O Ollama normalmente inicia o serviço local automaticamente. Se necessário, inicie-o
-com `ollama serve`. O padrão é `http://localhost:11434`; para outro endereço, configure
-`OLLAMA_HOST` conforme a convenção do Ollama. O fluxo reflexivo continua usando regras
-determinísticas para priorizar crise e encaminhamento; o contexto, a ação reflexa e a
-pergunta orientadora são enviados à equipe Llama junto com a pergunta do estudante.
+`CALMA_GROQ_MODEL` é opcional; esse é o padrão usado pelo projeto. A chave permanece
+no `.env` e não deve ser adicionada ao Git. O fluxo reflexivo continua aplicando
+regras determinísticas antes de encaminhar a dúvida; no fluxo completo, a pergunta,
+o contexto e o identificador informado são enviados à Groq junto com o diagnóstico
+e os exemplos de treino.
 
 ## Uso
 
@@ -132,6 +139,8 @@ Depois de cada resposta, a conversa continua; digite `sair` no campo da dúvida 
 encerrar. O histórico é consultado para contextualizar os próximos turnos.
 Na primeira consulta a uma FAQ, os pesos do modelo de embeddings são baixados para
 `.venv/hf-cache` (ou para o caminho definido por `HF_HOME`).
+Este fluxo recebe a dúvida pelo terminal; a Groq é o provedor de LLM, não um endpoint
+HTTP público do Calma.AI.
 
 ## Testes
 
@@ -217,4 +226,6 @@ o tool informa que não pode recuperar FAQs e mantém a busca curricular existen
 Nunca faça commit do `.env` nem compartilhe sua chave de API. O histórico dos
 estudantes fica em `data/estudantes/`, uma pasta local ignorada pelo Git. Não coloque
 informações pessoais de estudantes nas bases versionadas de `data/faq/` ou
-`data/datasets/`.
+`data/datasets/`. Como o fluxo completo usa a API Groq, não envie dados pessoais
+identificáveis na dúvida ou no identificador do estudante; prefira um código
+pseudônimo.

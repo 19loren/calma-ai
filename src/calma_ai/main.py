@@ -7,6 +7,9 @@ from crewai.types.streaming import CrewStreamingOutput
 from dotenv import load_dotenv
 
 from calma_ai.crew import CalmaAI, validar_mensagem_final
+from calma_ai.knowledge.exemplos_diagnosticador import (
+    formatar_exemplos_diagnosticador,
+)
 from calma_ai.models import Diagnostico, RespostaRevisada
 from calma_ai.reflexo import decidir, normalizar
 from calma_ai.tools.progresso import registrar_interacao
@@ -65,6 +68,9 @@ def processar_turno(inputs: dict[str, str]) -> None:
         return
     inputs["reflex_analysis"] = reflexo.resumo()
     inputs["reflex_response"] = reflexo.resposta or ""
+    inputs["eja_fewshot_examples"] = formatar_exemplos_diagnosticador(
+        inputs["student_question"]
+    )
 
     try:
         resultado = executar_equipe(inputs)
