@@ -32,6 +32,20 @@ class Diagnostico(BaseModel):
         description="Ação pedagógica escolhida para este turno."
     )
     justificativa: str = Field(description="Por que essa ação foi escolhida.")
+    emocao: str | None = Field(
+        default=None,
+        description=(
+            "Emoção principal estimada pela ferramenta detectar_emocao (ex.: 'confusão'), "
+            "ou null se não houve sinal claro. Estimativa, não diagnóstico psicológico."
+        ),
+    )
+    sinal_pedagogico: str | None = Field(
+        default=None,
+        description=(
+            "Sinal pedagógico devolvido por detectar_emocao: confusao, frustracao, "
+            "ansiedade, desanimo, curiosidade, engajamento_positivo ou neutro."
+        ),
+    )
 
 
 class RespostaRevisada(BaseModel):

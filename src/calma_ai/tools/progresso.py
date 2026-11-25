@@ -55,6 +55,8 @@ def registrar_interacao(estudante_id: str, pergunta: str, diagnostico: Diagnosti
             "pergunta": pergunta,
             "raciocinio_correto": diagnostico.raciocinio_do_estudante_correto,
             "acao": diagnostico.proxima_acao.value,
+            "emocao": diagnostico.emocao,
+            "sinal_pedagogico": diagnostico.sinal_pedagogico,
         }
     )
     perfil["historico"] = historico[-LIMITE_HISTORICO:]

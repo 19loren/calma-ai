@@ -28,6 +28,14 @@ diagnosticar:
        se for `sem_correspondencia` ou `indisponivel`, não invente matéria nem fatos.
     3. Use `calculadora` para obter a resposta correta do exercício e para conferir
        qualquer conta que o estudante tenha feito. Não faça contas de cabeça.
+    
+    4. Use `detectar_emocao` com o id "{student_id}" e a mensagem
+       "{student_question}". Copie `emocao_principal` para o campo `emocao` e
+       `sinal_pedagogico` para o campo `sinal_pedagogico`. Trate o resultado como
+       uma estimativa, nunca como diagnóstico psicológico. Se a ferramenta der
+       erro, deixe `emocao` como null e `sinal_pedagogico` como "neutro".
+       Use o sinal para ajustar a decisão: com frustracao ou desanimo repetidos,
+       prefira dar_dica a mais uma pergunta.
 
     Depois escolha UMA `proxima_acao`:
     - fazer_pergunta: o estudante ainda não apresentou raciocínio ou está no começo.
@@ -37,8 +45,8 @@ diagnosticar:
     - propor_exercicio: o estudante já chegou à resposta correta e precisa praticar.
   expected_output: >
     Diagnóstico estruturado com tópico, conceitos dominados, dificuldade principal,
-    se o raciocínio do estudante está correto (ou null se ele não tentou), a
-    resposta esperada verificada com a calculadora, a próxima ação e a justificativa.
+    se o raciocínio do estudante está correto (ou null se ele não tentou), resposta esperada verificada com a calculadora, a próxima ação, a justificativa,
+    a emoção estimada (ou null) e o sinal pedagógico.
   agent: diagnosticador
 
 orientar:
@@ -49,6 +57,9 @@ orientar:
     Mensagem reflexa ainda não exibida ao estudante: "{reflex_response}".
 
     Use o diagnóstico anterior e execute exatamente a `proxima_acao` escolhida.
+    Ajuste o tom ao `sinal_pedagogico` do diagnóstico (por exemplo, acolha a
+    frustração ou aproveite a curiosidade), sem nomear nem rotular a emoção do
+    estudante.
     Para identificar ou descrever um material, use apenas fatos presentes nas
     referências FAQ retornadas pelo diagnóstico. Se a busca for ambígua, peça uma
     informação para distinguir os materiais; sem correspondência, diga que não
