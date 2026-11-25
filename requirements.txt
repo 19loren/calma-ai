@@ -5,3 +5,6 @@ pymongo
 qdrant_client
 crewai
 pytest
+pysentimiento
+transformers
+torch
