@@ -1,0 +1,65 @@
+{
+  "materia": "matematica",
+  "aulas": [
+    {
+      "aula_id": "MAT-M01-A01",
+      "materia": "matematica",
+      "modulo_ordem": 1,
+      "modulo_titulo": "Porcentagem no Cotidiano",
+      "aula_ordem": 1,
+      "titulo": "O que é porcentagem e descontos",
+      "explicacao_base": "Porcentagem (%) indica uma divisão por 100. Para achar um desconto, multiplicamos o valor pela taxa e subtraímos do preço original.",
+      "nota_minima_aprovacao": 0.7,
+      "exercicios": [
+        {
+          "exercicio_id": "MAT-M01-A01-EX01",
+          "enunciado": "Uma camisa custa R$ 100,00 e está com 15% de desconto à vista. Qual será o valor final?",
+          "alternativas": [
+            "R$ 15,00",
+            "R$ 85,00",
+            "R$ 95,00",
+            "R$ 115,00"
+          ],
+          "correta_index": 1,
+          "dica": "15% de 100 equivale a R$ 15,00 de desconto. Subtraia 15 de 100."
+        },
+        {
+          "exercicio_id": "MAT-M01-A01-EX02",
+          "enunciado": "Quanto é 50% de R$ 240,00?",
+          "alternativas": [
+            "R$ 50,00",
+            "R$ 100,00",
+            "R$ 120,00",
+            "R$ 190,00"
+          ],
+          "correta_index": 2,
+          "dica": "50% representa exatamente a metade do valor."
+        }
+      ]
+    },
+    {
+      "aula_id": "MAT-M01-A02",
+      "materia": "matematica",
+      "modulo_ordem": 1,
+      "modulo_titulo": "Porcentagem no Cotidiano",
+      "aula_ordem": 2,
+      "titulo": "Acréscimos, multas e reajustes",
+      "explicacao_base": "Quando há multa ou reajuste positivo, calculamos o valor percentual e somamos ao preço original.",
+      "nota_minima_aprovacao": 0.7,
+      "exercicios": [
+        {
+          "exercicio_id": "MAT-M01-A02-EX01",
+          "enunciado": "Uma fatura de R$ 200,00 venceu e teve multa de 10%. Qual o novo valor a pagar?",
+          "alternativas": [
+            "R$ 180,00",
+            "R$ 210,00",
+            "R$ 220,00",
+            "R$ 250,00"
+          ],
+          "correta_index": 2,
+          "dica": "10% de 200 é 20. Some 200 + 20."
+        }
+      ]
+    }
+  ]
+}
