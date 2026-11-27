@@ -1,114 +1,73 @@
 diagnosticar:
   description: >
-    Mensagem do estudante (id: {student_id}): "{student_question}"
-
-    Conteúdo curricular: {subject}.
-    Contexto do dia a dia: {everyday_context}.
-
-    Pré-análise do agente reflexivo (regra aplicada, sinais percebidos, ação reflexa,
-    pergunta orientadora e contexto informado): {reflex_analysis}
-
-    Exemplos pedagógicos sintéticos recuperados do split train do GSM8K:
-    {eja_fewshot_examples}
-    Use-os somente como referência de estilo. Não reutilize seus números, fatos ou
-    cenários; faça o diagnóstico da tentativa atual independentemente e confira as
-    contas com a calculadora.
-
-    Considere a pré-análise e o contexto do estudante, mas faça seu próprio diagnóstico
-    pedagógico. A ação reflexa indica como encaminhar o turno; `proxima_acao` é a
-    decisão pedagógica deste diagnóstico.
+    Estudante {student_id}: "{student_question}"
+    Conteúdo: {subject}; contexto cotidiano: {everyday_context}.
+    Pré-análise reflexa: {reflex_analysis}
+    Exemplos sintéticos: {eja_fewshot_examples}
+    Use os exemplos apenas como referência de estilo; não reutilize seus dados
+    ou cenários. Faça um diagnóstico independente da mensagem atual.
 
     Investigue antes de decidir:
-    1. Use `consultar_perfil_estudante` com o id "{student_id}" para ver o histórico
-       e as dificuldades recorrentes.
-    2. Use `consultar_conteudo_eja` para identificar o tópico, os erros comuns e as
-       perguntas orientadoras. Quando houver referências FAQ, use os campos `tema`,
-       `resposta` e `fonte` para identificar o material e sustentar a informação.
-       Se `status_faq` for `ambigua`, peça um detalhe que diferencie as referências;
-       se for `sem_correspondencia` ou `indisponivel`, não invente matéria nem fatos.
-    3. Use `calculadora` para obter a resposta correta do exercício e para conferir
-       qualquer conta que o estudante tenha feito. Não faça contas de cabeça.
-    
-    4. Use `detectar_emocao` com o id "{student_id}" e a mensagem
-       "{student_question}". Copie `emocao_principal` para o campo `emocao` e
-       `sinal_pedagogico` para o campo `sinal_pedagogico`. Trate o resultado como
-       uma estimativa, nunca como diagnóstico psicológico. Se a ferramenta der
-       erro, deixe `emocao` como null e `sinal_pedagogico` como "neutro".
-       Use o sinal para ajustar a decisão: com frustracao ou desanimo repetidos,
-       prefira dar_dica a mais uma pergunta.
+    1. Use consultar_perfil_estudante com "{student_id}" para verificar histórico,
+       dificuldades e tentativas anteriores.
+    2. Use consultar_conteudo_eja para identificar tópico, erros comuns e orientação.
+       Baseie fatos sobre materiais nas FAQs. Se houver ambiguidade, peça um detalhe;
+       sem correspondência ou conteúdo disponível, não invente.
+    3. Use calculadora para conferir a resposta correta e as contas do estudante;
+       não calcule de cabeça.
+    4. Use detectar_emocao com "{student_id}" e a mensagem. Copie emocao_principal
+       para emocao e sinal_pedagogico para sinal_pedagogico. São estimativas, não
+       diagnósticos psicológicos. Se houver erro, use emocao=null e sinal neutro.
 
-    Depois escolha UMA `proxima_acao`:
-    - fazer_pergunta: o estudante ainda não apresentou raciocínio ou está no começo.
-    - dar_dica: o estudante tentou e errou, travou, ou o histórico mostra a mesma
-      dificuldade repetida (nesse caso a pergunta sozinha não está bastando).
-    - validar_e_avancar: o raciocínio apresentado está correto, mas ainda incompleto.
-    - propor_exercicio: o estudante já chegou à resposta correta e precisa praticar.
+    Escolha uma proxima_acao:
+    - fazer_pergunta: ainda não há tentativa suficiente.
+    - dar_dica: houve erro, bloqueio ou dificuldade recorrente; prefira essa ação
+      quando frustração ou desânimo se repetirem.
+    - validar_e_avancar: raciocínio correto, mas incompleto.
+    - propor_exercicio: resposta correta; proponha prática do mesmo tópico.
+    Use o reflexo como contexto, não como decisão: proxima_acao é sua decisão
+    pedagógica.
   expected_output: >
     Diagnóstico estruturado com tópico, conceitos dominados, dificuldade principal,
-    se o raciocínio do estudante está correto (ou null se ele não tentou), resposta esperada verificada com a calculadora, a próxima ação, a justificativa,
-    a emoção estimada (ou null) e o sinal pedagógico.
+    raciocínio correto (ou null se não houve tentativa), resposta esperada conferida
+    pela calculadora, proxima_acao, justificativa, emoção (ou null) e sinal pedagógico.
   agent: diagnosticador
 
 orientar:
   description: >
-    Mensagem do estudante: "{student_question}"
+    Mensagem: "{student_question}"
+    Conteúdo: {subject}; contexto cotidiano: {everyday_context}.
+    Pergunta-guia reflexa: {reflex_analysis}
+    Resposta reflexa ainda não exibida: "{reflex_response}"
 
-    Pergunta-guia sugerida pelo agente reflexivo: {reflex_analysis}.
-    Mensagem reflexa ainda não exibida ao estudante: "{reflex_response}".
+    Execute a proxima_acao do diagnóstico anterior, usando o sinal pedagógico para
+    adaptar o acolhimento sem nomear a emoção:
+    - fazer_pergunta: se necessário, explique a ideia básica e pergunte o primeiro passo.
+    - dar_dica: dê uma pista concreta e parcial sobre a dificuldade e pergunte como seguir.
+    - validar_e_avancar: reconheça o que está correto e pergunte o próximo passo.
+    - propor_exercicio: proponha prática nova do tópico, buscando-a em consultar_conteudo_eja.
 
-    Use o diagnóstico anterior e execute exatamente a `proxima_acao` escolhida.
-    Ajuste o tom ao `sinal_pedagogico` do diagnóstico (por exemplo, acolha a
-    frustração ou aproveite a curiosidade), sem nomear nem rotular a emoção do
-    estudante.
-    Para identificar ou descrever um material, use apenas fatos presentes nas
-    referências FAQ retornadas pelo diagnóstico. Se a busca for ambígua, peça uma
-    informação para distinguir os materiais; sem correspondência, diga que não
-    encontrou essa informação na base em vez de completar com suposições.
-    - fazer_pergunta: comece pelo primeiro passo que faça sentido para esta mensagem.
-      Se o conceito parecer novo, explique uma ideia básica em linguagem simples e
-      depois pergunte o que o estudante já percebeu.
-    - dar_dica: dê uma dica concreta sobre a dificuldade principal (pode usar um
-      exemplo análogo mais simples), explique só o próximo passo e pergunte como o
-      estudante continuaria.
-    - validar_e_avancar: diga especificamente o que está certo no raciocínio e
-      pergunte qual é o próximo passo.
-    - propor_exercicio: parabenize sem exagero e proponha um exercício novo do
-      mesmo tópico, buscando um na base com `consultar_conteudo_eja`.
-
-    Use a pergunta-guia como inspiração, não copie um exemplo se os valores ou a
-    situação não corresponderem ao que o estudante escreveu. Personalize a resposta
-    com os dados e o contexto de {everyday_context}; reconheça tentativas específicas,
-    inclusive quando estiverem incompletas ou erradas. Se houver uma mensagem reflexa,
-    incorpore seu acolhimento ou limite em uma única resposta, sem repetir a frase pronta.
-    Preserve exatamente as relações descritas no enunciado e no diagnóstico. Não diga
-    que duas quantidades são iguais quando o problema informa que uma é metade, dobro
-    ou outra proporção da outra. Antes de enviar, confira que cada afirmação matemática
-    corresponde aos dados do problema; se houver dúvida, pergunte em vez de afirmar.
-    Responda em português brasileiro. Nunca entregue a resposta final nem resolva o
-    exercício original por completo. Você pode usar uma representação, uma etapa parcial
-    ou um exemplo análogo para ensinar; encerre com uma pergunta que convide o estudante
-    a pensar ou tentar o próximo passo. Trabalhe uma ideia por turno.
+    Use apenas fatos do enunciado, diagnóstico e FAQs; diante de ambiguidade, pergunte
+    em vez de supor. Preserve as relações e os valores do problema. Reconheça a tentativa
+    específica, conecte-a ao contexto cotidiano e incorpore a mensagem reflexa no máximo
+    uma vez. Responda em português brasileiro, em até 5 frases. Não revele a resposta
+    final nem resolva o exercício; trabalhe uma ideia por turno e termine com pergunta
+    orientadora (ou com o novo exercício proposto).
   expected_output: >
-    Uma mensagem breve (até 5 frases), empática e adequada a um estudante adulto da
-    EJA, terminando com uma pergunta orientadora (ou com o exercício proposto).
+    Mensagem breve e empática para um estudante adulto da EJA, executando a ação do
+    diagnóstico sem entregar a resposta final.
   agent: tutor
   context:
     - diagnosticar
 
 revisar:
   description: >
-    Revise a mensagem do tutor antes de ela chegar ao estudante. Compare com a
-    `resposta_esperada` do diagnóstico e verifique se a mensagem:
-    1. Não revela o resultado final nem apresenta uma conta já resolvida do exercício.
-    2. É respeitosa, sem infantilizar, e não critica gramática ou gírias.
-    3. É curta e termina com uma pergunta.
-    4. Mantém as relações e os fatos do enunciado e do diagnóstico, sem contradizê-los
-       nem inventar informações.
-    Se algum critério falhar, reescreva a mensagem corrigindo o problema. Se
-    estiver tudo certo, mantenha a mensagem como está.
+    Revise a mensagem do tutor comparando-a com a resposta_esperada e o diagnóstico.
+    Garanta que ela não revele a resposta nem resolva a conta, seja respeitosa e breve,
+    termine com uma pergunta orientadora e não contradiga nem invente fatos ou relações.
+    Se falhar em algum critério, reescreva; caso contrário, mantenha.
   expected_output: >
-    A mensagem final para o estudante, indicando se a versão do tutor revelava a
-    resposta e quais ajustes foram feitos.
+    Mensagem final para o estudante, com indicação de vazamento da resposta e ajustes feitos.
   agent: revisor
   context:
     - diagnosticar
