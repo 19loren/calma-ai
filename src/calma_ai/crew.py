@@ -12,7 +12,12 @@ from crewai.tasks.task_output import TaskOutput
 from dotenv import load_dotenv
 
 from calma_ai.models import Diagnostico, RespostaRevisada
-from calma_ai.tools import CalculadoraTool, ConsultarConteudoTool, PerfilEstudanteTool
+from calma_ai.tools import (
+    CalculadoraTool,
+    ConsultarConteudoTool,
+    DetectEmocaoTool,
+    PerfilEstudanteTool,
+)
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
@@ -155,7 +160,12 @@ class CalmaAI:
         return Agent(
             config=self.agents_config["diagnosticador"],  # type: ignore[index]
             llm=criar_llm_groq(),
-            tools=[PerfilEstudanteTool(), ConsultarConteudoTool(), CalculadoraTool()],
+            tools=[
+                PerfilEstudanteTool(),
+                ConsultarConteudoTool(),
+                CalculadoraTool(),
+                DetectEmocaoTool(),
+            ],
         )
 
     @agent

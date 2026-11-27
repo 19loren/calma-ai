@@ -89,6 +89,7 @@ def _garantir_campos_perfil(perfil: dict[str, Any], estudante_id: str) -> dict[s
     base.update(perfil)
     return base
 
+### revisar + 1x
 
 def _salvar_local_atomico(estudante_id: str, perfil: dict[str, Any]) -> Path:
     arquivo = _arquivo_perfil(estudante_id)
@@ -157,6 +158,8 @@ def registrar_interacao(estudante_id: str, pergunta: str, diagnostico: Diagnosti
         "pergunta": pergunta,
         "raciocinio_correto": diagnostico.raciocinio_do_estudante_correto,
         "acao": diagnostico.proxima_acao.value,
+        "emocao": diagnostico.emocao,
+        "sinal_pedagogico": diagnostico.sinal_pedagogico,
     }
     historico = perfil.setdefault("historico", [])
     historico.append(registro_turno)
@@ -179,6 +182,7 @@ def registrar_interacao(estudante_id: str, pergunta: str, diagnostico: Diagnosti
 
     return _salvar_local_atomico(estudante_id, perfil)
 
+###
 
 def _carregar_aulas_locais(materia: str | None = None) -> list[dict[str, Any]]:
     pasta_lotes = Path(os.getenv("CALMA_LOTES_DIR", ROOT_DIR / "data" / "faq" / "lotes"))
@@ -234,18 +238,16 @@ def listar_trilha_materia(materia: str, estudante_id: str) -> list[dict[str, Any
     return resultado
 
 
-def submeter_exercicios_aula(
-    estudante_id: str, aula_id: str, respostas_indices: list[int]
-) -> dict[str, Any]:
+  def submeter_exercicios_aula(estudante_id: str, aula_id: str, respostas_indices: list[int]) -> dict[str, Any]:
     """Corrige a lista de exercícios da aula, registra nota e desbloqueia a próxima aula."""
     todas_aulas = _carregar_aulas_locais()
     db = _db()
     aula_encontrada: dict[str, Any] | None = None
 
     if db is not None:
-        try:
+      try:
             aula_encontrada = db["trilhas"].find_one({"aula_id": aula_id}, {"_id": 0})
-        except Exception as erro:
+          except Exception as erro:
             LOGGER.warning("Falha ao buscar aula no MongoDB Atlas: %s", erro)
 
     if aula_encontrada is None:
@@ -317,11 +319,11 @@ def submeter_exercicios_aula(
                 {"$set": para_salvar},
                 upsert=True,
             )
-        except Exception as erro:
+except Exception as erro:
             LOGGER.warning("Falha ao atualizar progresso de aula no MongoDB Atlas: %s", erro)
 
     _salvar_local_atomico(estudante_id, perfil)
-
+    
     return {
         "aula_id": aula_id,
         "aprovado": aprovado,
@@ -331,13 +333,11 @@ def submeter_exercicios_aula(
         "proxima_aula_id": proxima_aula_id,
         "detalhes": detalhes,
     }
-
-
-class PerfilEstudanteInput(BaseModel):
+  
+ class PerfilEstudanteInput(BaseModel):
     estudante_id: str = Field(description="Identificador do estudante.")
-
-
-class PerfilEstudanteTool(BaseTool):
+      
+ class PerfilEstudanteTool(BaseTool):
     name: str = "consultar_perfil_estudante"
     description: str = (
         "Retorna o histórico do estudante: conceitos que já domina, dificuldades "
@@ -345,8 +345,9 @@ class PerfilEstudanteTool(BaseTool):
         "diagnóstico e evitar repetir abordagens que não funcionaram."
     )
     args_schema: type[BaseModel] = PerfilEstudanteInput
-
-    def _run(self, estudante_id: str) -> str:
+     
+    
+def _run(self, estudante_id: str) -> str:
         perfil = carregar_perfil(estudante_id)
         if not perfil["historico"]:
             return f"Estudante '{estudante_id}' ainda não tem histórico. Esta é a primeira interação."
